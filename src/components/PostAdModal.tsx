@@ -19,7 +19,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [category, setCategory] = useState('Boys Mess');
   const [rent, setRent] = useState('');
   const [deposit, setDeposit] = useState('');
-  const [district, setDistrict] = useState('Balasore');
+  const [district, setDistrict] = useState(ODISHA_DISTRICTS.find(d => d.startsWith('Balasore')) || ODISHA_DISTRICTS[0]);
   const [locality, setLocality] = useState('');
   const [landmark, setLandmark] = useState('');
   const [contactName, setContactName] = useState('');
@@ -58,6 +58,15 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       return;
     }
 
+    const phone = contactPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    if (!/^[6-9]\d{9}$/.test(phone) || !Number.isInteger(Number(rent)) || Number(rent) < 0 || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0) {
+      setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
+      return;
+    }
+    if (imageFiles.some(file => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+      setErrorMsg('Photos must be JPEG, PNG or WebP and at most 5 MB each.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -73,6 +82,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           .from('listing-images')
           .upload(filePath, file);
 
+        if (uploadError) throw uploadError;
         if (!uploadError) {
           const { data: publicUrlData } = supabase.storage
             .from('listing-images')
@@ -95,11 +105,12 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           locality,
           landmark: landmark || null,
           contact_name: contactName,
-          contact_phone: contactPhone,
-          whatsapp_number: contactPhone,
+          contact_phone: phone,
+          whatsapp_number: phone,
           amenities: selectedAmenities,
           images: imageUrls,
-          is_active: true
+          is_active: false,
+          is_featured: false
         }
       ]);
 
@@ -131,7 +142,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : 'Post Free Advertisement'}</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              {isOdia ? '୧୦୦% ମାଗଣା • ତୁରନ୍ତ ଲାଇଭ୍ ହୁଏ' : '100% Free • Goes live instantly'}
+              {isOdia ? '୧୦୦% ମାଗଣା • ଅନୁମୋଦନ ପରେ ପ୍ରକାଶିତ ହେବ' : '100% Free • Published after admin approval'}
             </p>
           </div>
           <button
@@ -422,10 +433,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{isOdia ? 'ପୋଷ୍ଟ ହେଉଛି...' : 'Publishing Listing...'}</span>
+                <span>{isOdia ? 'ପୋଷ୍ଟ ହେଉଛି...' : 'Submitting for review...'}</span>
               </>
             ) : (
-              <span>{isOdia ? 'ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ (ମାଗଣା)' : 'Publish Free Listing'}</span>
+              <span>{isOdia ? 'ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ (ମାଗଣା)' : 'Submit Free Listing'}</span>
             )}
           </button>
         </form>

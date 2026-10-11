@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, PlusCircle, Globe, MapPin, Sparkles } from 'lucide-react';
+import { Home, PlusCircle, Globe, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   isOdia: boolean;
