@@ -124,7 +124,7 @@ export default function Home() {
           <p className="text-slate-600 text-xs sm:text-sm mt-2.5 max-w-xl mx-auto font-medium">
             {isOdia
               ? 'ବାଲେଶ୍ୱର ଓ ଓଡ଼ିଶାର ଛାତ୍ର, ଚାକିରିଆ ଓ ପରିବାର ପାଇଁ ମାଗଣା ପୋର୍ଟାଲ୍। ସିଧା ମାଲିକଙ୍କ ସହ WhatsApp କରନ୍ତୁ।'
-              : 'Direct owner contact for students, bachelors & families in Balasore & across Odisha. Instant WhatsApp chat.'}
+              : 'Direct owner contact for students, bachelors & families across Odisha. Instant WhatsApp chat.'}
           </p>
 
           {/* Clean 2-Dropdown + Search Bar */}
@@ -262,7 +262,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#005B94] hover:bg-[#004A7C] text-white text-xs font-bold transition shadow-sm cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>{isOdia ? 'ମାଗଣା ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Post Free Listing'}</span>
+              <span>{isOdia ? 'ମାଗଣା ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Post Free Listings'}</span>
             </button>
           </div>
         ) : (
@@ -296,7 +296,7 @@ export default function Home() {
           className="flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#005B94] hover:bg-[#004A7C] text-white font-bold text-xs shadow-lg shadow-[#005B94]/40 active:scale-95 transition cursor-pointer"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>{isOdia ? 'ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Post Free Ad'}</span>
+          <span>{isOdia ? 'ମାଗଣା ଲିଷ୍ଟିଂ ଦିଅନ୍ତୁ' : 'Post Free Listings'}</span>
         </button>
       </div>
 
@@ -325,8 +325,8 @@ export default function Home() {
             </div>
             <p className="text-xs text-slate-500 mt-1">
               {isOdia 
-                ? 'ବାଲେଶ୍ୱର ଓ ଓଡ଼ିଶାରେ ଘର ଭଡ଼ା ଓ ହଷ୍ଟେଲ୍ ଖୋଜିବାର ବିଶ୍ୱସ୍ତ ମଞ୍ଚ।' 
-                : 'Direct student rooms, mess, hostels and flats without brokers in Balasore & across Odisha.'}
+                ? 'ଓଡ଼ିଶାର ସମସ୍ତ ଛାତ୍ର, ଚାକିରିଆ ଓ ପରିବାର ପାଇଁ ଘର ଭଡ଼ା ଖୋଜିବାର ବିଶ୍ୱସ୍ତ ମଞ୍ଚ।' 
+                : 'Direct student rooms, mess, hostels and flats without brokers across Odisha.'}
             </p>
           </div>
 
@@ -345,7 +345,7 @@ export default function Home() {
               onClick={() => setIsPostModalOpen(true)}
               className="hover:text-slate-900 cursor-pointer"
             >
-              {isOdia ? 'ମାଗଣା ବିଜ୍ଞାପନ' : 'Post Free Ad'}
+              {isOdia ? 'ମାଗଣା ଲିଷ୍ଟିଂ' : 'Post Free Listings'}
             </button>
           </div>
         </div>
