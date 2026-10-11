@@ -46,7 +46,7 @@ export default function Home() {
     fetchListings();
   }, []);
 
-  // Available localities for current district
+  // Available localities for current selected district
   const availableLocalities = useMemo(() => {
     const cleanDist = selectedDistrict.split(' ')[0];
     return DISTRICT_LOCALITIES[cleanDist] || [];
@@ -61,7 +61,7 @@ export default function Home() {
         if (!item.district.toLowerCase().includes(cleanSelected)) return false;
       }
 
-      // Locality dropdown filter
+      // Locality / Block dropdown filter
       if (selectedLocality !== 'All') {
         if (!item.locality.toLowerCase().includes(selectedLocality.toLowerCase())) {
           return false;
@@ -103,12 +103,12 @@ export default function Home() {
         onOpenPostModal={() => setIsPostModalOpen(true)}
       />
 
-      {/* Hero Section - KLM Royal Blue Theme */}
+      {/* Hero Section - KLM Royal Blue */}
       <section className="bg-gradient-to-b from-[#E6F4FA] via-[#F0F8FC] to-transparent pt-8 pb-6 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
           
-          {/* Punchy Trust Tagline */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-[#005B94] border border-[#005B94]/20 text-xs font-bold shadow-2xs mb-3.5">
+          {/* Trust Tagline */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-[#005B94] border border-[#005B94]/20 text-xs font-bold shadow-2xs mb-3.5">
             <Sparkles className="w-4 h-4 text-[#00A1DE]" />
             <span>
               {isOdia 
@@ -126,99 +126,65 @@ export default function Home() {
               : 'Direct owner contact for students, bachelors & families in Balasore & across Odisha. Instant WhatsApp chat.'}
           </p>
 
-          {/* Search & Area Filter Bar */}
-          <div className="mt-6 bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 max-w-3xl mx-auto flex flex-col gap-2.5">
-            <div className="flex flex-col sm:flex-row gap-2.5">
-              {/* District Selector */}
-              <div className="relative sm:w-52">
-                <MapPin className="w-4 h-4 text-[#005B94] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <select
-                  value={selectedDistrict}
-                  onChange={(e) => {
-                    setSelectedDistrict(e.target.value);
-                    setSelectedLocality('All');
-                  }}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94] appearance-none font-bold text-slate-900 cursor-pointer"
-                >
-                  <option value="Balasore">Balasore (ବାଲେଶ୍ୱର)</option>
-                  <option value="All">{isOdia ? 'ସମସ୍ତ ଓଡ଼ିଶା (All)' : 'All Odisha'}</option>
-                  {ODISHA_DISTRICTS.filter(d => !d.startsWith('Balasore')).map((dist, idx) => (
-                    <option key={idx} value={dist.split(' ')[0]}>
-                      {dist}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Locality Selector Dropdown */}
-              {availableLocalities.length > 0 && (
-                <div className="relative sm:w-52">
-                  <Navigation className="w-3.5 h-3.5 text-[#00A1DE] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <select
-                    value={selectedLocality}
-                    onChange={(e) => setSelectedLocality(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94] appearance-none font-semibold text-slate-800 cursor-pointer"
-                  >
-                    <option value="All">{isOdia ? 'ସମସ୍ତ ଅଞ୍ଚଳ (All Areas)' : 'All Localities / Areas'}</option>
-                    {availableLocalities.map((loc, idx) => (
-                      <option key={idx} value={loc}>
-                        {loc}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Search Keywords Input */}
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder={isOdia ? 'କଲେଜ ବା ନିକଟବର୍ତ୍ତୀ ସ୍ଥାନ ଖୋଜନ୍ତୁ...' : 'Search college, landmark, room type...'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94]"
-                />
-              </div>
+          {/* Clean 2-Dropdown + Search Bar */}
+          <div className="mt-6 bg-white p-3.5 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 max-w-3xl mx-auto flex flex-col sm:flex-row gap-2.5">
+            
+            {/* 1. District Dropdown */}
+            <div className="relative sm:w-56">
+              <MapPin className="w-4 h-4 text-[#005B94] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select
+                value={selectedDistrict}
+                onChange={(e) => {
+                  setSelectedDistrict(e.target.value);
+                  setSelectedLocality('All');
+                }}
+                className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94] font-bold text-slate-900 cursor-pointer appearance-none"
+              >
+                <option value="Balasore">Balasore (ବାଲେଶ୍ୱର)</option>
+                <option value="All">{isOdia ? 'ସମସ୍ତ ଓଡ଼ିଶା (All Odisha)' : 'All Odisha'}</option>
+                {ODISHA_DISTRICTS.filter(d => !d.startsWith('Balasore')).map((dist, idx) => (
+                  <option key={idx} value={dist.split(' ')[0]}>
+                    {dist}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Quick Locality Pills for Balasore */}
-            {availableLocalities.length > 0 && (
-              <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-1 scrollbar-none border-t border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 shrink-0 mr-1">
-                  {isOdia ? 'ଲୋକପ୍ରିୟ ଅଞ୍ଚଳ:' : 'Popular Areas:'}
-                </span>
-                <button
-                  onClick={() => setSelectedLocality('All')}
-                  className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition shrink-0 cursor-pointer ${
-                    selectedLocality === 'All'
-                      ? 'bg-[#005B94] text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  All
-                </button>
-                {availableLocalities.slice(0, 8).map((loc, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedLocality(loc)}
-                    className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold transition shrink-0 cursor-pointer ${
-                      selectedLocality === loc
-                        ? 'bg-[#005B94] text-white font-bold'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
+            {/* 2. Area / Block Dropdown */}
+            <div className="relative sm:w-56">
+              <Navigation className="w-3.5 h-3.5 text-[#00A1DE] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select
+                value={selectedLocality}
+                onChange={(e) => setSelectedLocality(e.target.value)}
+                className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94] font-semibold text-slate-800 cursor-pointer appearance-none"
+              >
+                <option value="All">{isOdia ? 'ସମସ୍ତ ଅଞ୍ଚଳ (All Areas / Blocks)' : 'All Areas / Blocks'}</option>
+                {availableLocalities.map((loc, idx) => (
+                  <option key={idx} value={loc}>
                     {loc}
-                  </button>
+                  </option>
                 ))}
-              </div>
-            )}
+              </select>
+            </div>
+
+            {/* 3. Search Keywords Input */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder={isOdia ? 'ଖୋଜନ୍ତୁ (e.g. FM College, Single Room)...' : 'Search landmark, college, keywords...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94]"
+              />
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         
         {/* Category Pills Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -288,7 +254,7 @@ export default function Home() {
             <p className="text-xs text-slate-500 mb-5">
               {isOdia
                 ? 'ଆପଣ ଏହି ସ୍ଥାନର ପ୍ରଥମ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରିପାରିବେ!'
-                : 'Try clearing some filters or be the first to post a room here!'}
+                : 'Try changing the area filter or be the first to post a room here!'}
             </p>
             <button
               onClick={() => setIsPostModalOpen(true)}
