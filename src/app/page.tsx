@@ -188,7 +188,7 @@ export default function Home() {
         </div>
       </section>
 
-      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : 'Your listing has been submitted. Please confirm your email. It will appear after admin approval and expire after 30 days.'}</p>}
+      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : 'Your listing has been submitted. It will appear after admin approval and expire after 30 days. If you provided an email, confirm it to receive renewal reminders.'}</p>}
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         

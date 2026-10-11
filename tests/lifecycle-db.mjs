@@ -17,8 +17,18 @@ id uuid primary key default gen_random_uuid(), created_at timestamptz default no
 );
 `);
 for (const file of ['20261011_moderation.sql', '20261012_reports.sql', '20261012_automated_lifecycle.sql']) await db.exec(readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'));
+await db.exec(readFileSync(new URL('../supabase/rollout/optional_owner_email.sql', import.meta.url), 'utf8'));
 const row = { title: 'Test property', category: 'Boys Mess', rent_monthly: 1000, deposit: 0, district: 'Balasore', locality: 'Test locality', contact_name: 'Test owner', contact_phone: '9876543210', whatsapp_number: '9876543210', amenities: [], images: [] };
 await db.exec('set role service_role');
+for (const email of [null, '', '   ']) {
+  const noEmailId = (await db.query('select public.submit_listing_with_owner($1::jsonb, $2) as id', [JSON.stringify(row), email])).rows[0].id;
+  const submitted = (await db.query('select * from listings where id=$1', [noEmailId])).rows[0];
+  assert.equal(submitted.moderation_status, 'pending');
+  assert.ok(Math.abs(submitted.expires_at.getTime() - Date.now() - 30 * 86400000) < 10000);
+  assert.equal((await db.query('select count(*)::int as n from listing_owner_contacts where listing_id=$1', [noEmailId])).rows[0].n, 0);
+  assert.equal((await db.query('select count(*)::int as n from notification_jobs where listing_id=$1', [noEmailId])).rows[0].n, 0);
+  await db.query('delete from listings where id=$1', [noEmailId]);
+}
 const id = (await db.query('select public.submit_listing_with_owner($1::jsonb, $2) as id', [JSON.stringify(row), 'test@example.com'])).rows[0].id;
 await db.exec('reset role');
 let listing = (await db.query('select * from listings where id=$1', [id])).rows[0];

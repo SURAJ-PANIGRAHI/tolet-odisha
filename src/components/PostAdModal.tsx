@@ -54,7 +54,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     e.preventDefault();
     setErrorMsg('');
 
-    if (!title || !rent || !district || !locality || !contactName || !contactPhone || !contactEmail) {
+    if (!title || !rent || !district || !locality || !contactName || !contactPhone) {
       setErrorMsg(isOdia ? 'ଦୟାକରି ସମସ୍ତ ଆବଶ୍ୟକୀୟ ତଥ୍ୟ ପୂରଣ କରନ୍ତୁ।' : 'Please fill all required fields.');
       return;
     }
@@ -335,9 +335,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="owner-email">{isOdia ? 'ଆପଣଙ୍କ ଇମେଲ୍ *' : 'Your email *'}</label>
-            <input id="owner-email" type="email" required maxLength={254} value={contactEmail} onChange={event => setContactEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm" />
-            <p className="mt-1 text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ନିଶ୍ଚିତ କରନ୍ତୁ। ୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ; ନବୀକରଣ ପାଇଁ ଇମେଲ୍ ମିଳିବ।' : 'Confirm your email for expiry reminders. Your email stays private. Listings expire after 30 days; renew by email if still available.'}</p>
+            <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="owner-email">{isOdia ? 'ଆପଣଙ୍କ ଇମେଲ୍ (ଇଚ୍ଛାଧୀନ)' : 'Your email (optional)'}</label>
+            <input id="owner-email" type="email" maxLength={254} value={contactEmail} onChange={event => setContactEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm" />
+            <p className="mt-1 text-xs text-slate-500">{isOdia ? '୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ। ନବୀକରଣ ଇମେଲ୍ ପାଇବା ପାଇଁ ଇମେଲ୍ ଦିଅନ୍ତୁ ଓ ନିଶ୍ଚିତ କରନ୍ତୁ। ଇମେଲ୍ ଗୋପନୀୟ ରହିବ।' : 'Listings expire after 30 days. Add and confirm an email to receive renewal reminders. Your email stays private. Without an email, you can post again after expiry.'}</p>
           </div>
           {/* Amenities Selector */}
           <div>
