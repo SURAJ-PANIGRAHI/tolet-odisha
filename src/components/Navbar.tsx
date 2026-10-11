@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, PlusCircle, Globe, MapPin, Sparkles } from 'lucide-react';
+import { Home, PlusCircle, Globe, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   isOdia: boolean;
@@ -58,13 +58,13 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
             <span>{isOdia ? 'English' : 'ଓଡ଼ିଆ'}</span>
           </button>
 
-          {/* Post Free Ad CTA */}
+          {/* Post Free Listings CTA */}
           <button
             onClick={onOpenPostModal}
             className="flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold text-white bg-[#005B94] hover:bg-[#004A7C] active:scale-95 shadow-sm shadow-[#005B94]/30 transition cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>{isOdia ? 'ମାଗଣାରେ ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Post Free Ad'}</span>
+            <span>{isOdia ? 'ମାଗଣାରେ ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Post Free Listings'}</span>
           </button>
         </div>
 

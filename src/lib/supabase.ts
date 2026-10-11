@@ -8,6 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface Listing {
   id: string;
   created_at: string;
+  expires_at?: string;
   title: string;
   description: string | null;
   category: string;

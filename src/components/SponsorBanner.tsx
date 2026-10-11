@@ -9,7 +9,11 @@ interface SponsorBannerProps {
   isOdia: boolean;
 }
 
-export const SponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia }) => {
+export const SponsorBanner: React.FC<SponsorBannerProps> = (props) => (
+  <DistrictSponsorBanner key={props.district} {...props} />
+);
+
+const DistrictSponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia }) => {
   const cleanDistrict = district === 'All' ? 'Balasore' : district.split(' ')[0];
   const sponsorsList = LOCAL_SPONSORS[cleanDistrict] || [];
 

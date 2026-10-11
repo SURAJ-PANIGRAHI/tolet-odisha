@@ -19,9 +19,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [category, setCategory] = useState('Boys Mess');
   const [rent, setRent] = useState('');
   const [deposit, setDeposit] = useState('');
-  const [district, setDistrict] = useState('Balasore');
+  const [district, setDistrict] = useState(ODISHA_DISTRICTS.find(d => d.startsWith('Balasore')) || ODISHA_DISTRICTS[0]);
   const [locality, setLocality] = useState('');
   const [landmark, setLandmark] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -53,11 +54,20 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     e.preventDefault();
     setErrorMsg('');
 
-    if (!title || !rent || !district || !locality || !contactName || !contactPhone) {
+    if (!title || !rent || !district || !locality || !contactName || !contactPhone || !contactEmail) {
       setErrorMsg(isOdia ? 'ଦୟାକରି ସମସ୍ତ ଆବଶ୍ୟକୀୟ ତଥ୍ୟ ପୂରଣ କରନ୍ତୁ।' : 'Please fill all required fields.');
       return;
     }
 
+    const phone = contactPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    if (!/^[6-9]\d{9}$/.test(phone) || !Number.isInteger(Number(rent)) || Number(rent) < 0 || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0) {
+      setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
+      return;
+    }
+    if (imageFiles.some(file => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+      setErrorMsg('Photos must be JPEG, PNG or WebP and at most 5 MB each.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -73,6 +83,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           .from('listing-images')
           .upload(filePath, file);
 
+        if (uploadError) throw uploadError;
         if (!uploadError) {
           const { data: publicUrlData } = supabase.storage
             .from('listing-images')
@@ -84,7 +95,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       }
 
       // Insert listing into Supabase
-      const { error: insertError } = await supabase.from('listings').insert([
+      const response = await fetch('/api/listings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: contactEmail, listing:
         {
           title,
           description: description || null,
@@ -95,16 +108,18 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           locality,
           landmark: landmark || null,
           contact_name: contactName,
-          contact_phone: contactPhone,
-          whatsapp_number: contactPhone,
+          contact_phone: phone,
+          whatsapp_number: phone,
           amenities: selectedAmenities,
           images: imageUrls,
-          is_active: true
+          is_active: false,
+          is_featured: false
         }
-      ]);
-
-      if (insertError) {
-        throw insertError;
+      }),
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Unable to submit listing');
       }
 
       onSuccess();
@@ -131,7 +146,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : 'Post Free Advertisement'}</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              {isOdia ? '୧୦୦% ମାଗଣା • ତୁରନ୍ତ ଲାଇଭ୍ ହୁଏ' : '100% Free • Goes live instantly'}
+              {isOdia ? '୧୦୦% ମାଗଣା • ଅନୁମୋଦନ ପରେ ପ୍ରକାଶିତ ହେବ' : '100% Free • Published after admin approval'}
             </p>
           </div>
           <button
@@ -319,6 +334,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="owner-email">{isOdia ? 'ଆପଣଙ୍କ ଇମେଲ୍ *' : 'Your email *'}</label>
+            <input id="owner-email" type="email" required maxLength={254} value={contactEmail} onChange={event => setContactEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm" />
+            <p className="mt-1 text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ନିଶ୍ଚିତ କରନ୍ତୁ। ୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ; ନବୀକରଣ ପାଇଁ ଇମେଲ୍ ମିଳିବ।' : 'Confirm your email for expiry reminders. Your email stays private. Listings expire after 30 days; renew by email if still available.'}</p>
+          </div>
           {/* Amenities Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
@@ -422,10 +442,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{isOdia ? 'ପୋଷ୍ଟ ହେଉଛି...' : 'Publishing Listing...'}</span>
+                <span>{isOdia ? 'ପୋଷ୍ଟ ହେଉଛି...' : 'Submitting for review...'}</span>
               </>
             ) : (
-              <span>{isOdia ? 'ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ (ମାଗଣା)' : 'Publish Free Listing'}</span>
+              <span>{isOdia ? 'ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ (ମାଗଣା)' : 'Submit Free Listing'}</span>
             )}
           </button>
         </form>

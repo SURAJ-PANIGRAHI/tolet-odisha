@@ -13,38 +13,41 @@ import { Search, MapPin, PlusCircle, Sparkles, AlertCircle, RefreshCw, Navigatio
 export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [submissionNotice, setSubmissionNotice] = useState(false);
   const [isOdia, setIsOdia] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   // Filter States
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setClock(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('Balasore');
   const [selectedLocality, setSelectedLocality] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [maxRent, setMaxRent] = useState<number>(10000);
 
-  // Fetch listings from Supabase
-  const fetchListings = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (data) setListings(data);
-    } catch (err) {
-      console.error('Error fetching listings:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch public listings once, ignoring results after unmount.
   useEffect(() => {
-    fetchListings();
+    let cancelled = false;
+    async function load() {
+      try {
+        const { data, error } = await supabase.from('listings').select('*')
+          .eq('is_active', true).order('created_at', { ascending: false });
+        if (error) throw error;
+        if (!cancelled) setListings(data || []);
+      } catch {
+        if (!cancelled) setFetchError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => { cancelled = true; };
   }, []);
 
   // Available localities for current selected district
@@ -56,6 +59,7 @@ export default function Home() {
   // Filter logic
   const filteredListings = useMemo(() => {
     return listings.filter((item) => {
+      if (item.expires_at && Date.parse(item.expires_at) <= clock) return false;
       // District filter
       if (selectedDistrict !== 'All') {
         const cleanSelected = selectedDistrict.split(' ')[0].toLowerCase();
@@ -93,7 +97,7 @@ export default function Home() {
 
       return true;
     });
-  }, [listings, selectedDistrict, selectedLocality, selectedCategory, maxRent, searchQuery]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, maxRent, searchQuery, clock]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 sm:pb-12">
@@ -184,6 +188,7 @@ export default function Home() {
         </div>
       </section>
 
+      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : 'Your listing has been submitted. Please confirm your email. It will appear after admin approval and expire after 30 days.'}</p>}
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         
@@ -243,6 +248,10 @@ export default function Home() {
             <p className="text-sm font-semibold text-slate-600">
               {isOdia ? 'ତଥ୍ୟ ଲୋଡ୍ ହେଉଛି...' : 'Loading listings...'}
             </p>
+          </div>
+        ) : fetchError ? (
+          <div role="alert" className="rounded-xl bg-red-50 p-6 text-red-800">
+            Unable to load listings. Please refresh to try again.
           </div>
         ) : filteredListings.length === 0 ? (
           <div className="bg-white rounded-3xl p-8 sm:p-12 text-center max-w-lg mx-auto border border-slate-200 my-8 shadow-xs">
@@ -310,7 +319,7 @@ export default function Home() {
       <PostAdModal
         isOpen={isPostModalOpen}
         onClose={() => setIsPostModalOpen(false)}
-        onSuccess={fetchListings}
+        onSuccess={() => setSubmissionNotice(true)}
         isOdia={isOdia}
       />
       {/* Footer */}

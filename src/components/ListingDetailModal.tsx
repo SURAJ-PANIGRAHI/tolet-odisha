@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ReportModal } from '@/components/ReportModal';
 import { Listing } from '@/lib/supabase';
 import { X, MapPin, Phone, MessageSquare, CheckCircle, User, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
@@ -10,10 +11,16 @@ interface ListingDetailModalProps {
   isOdia: boolean;
 }
 
-export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing, onClose, isOdia }) => {
+export const ListingDetailModal: React.FC<ListingDetailModalProps> = (props) => (
+  <ListingDetailContent key={props.listing?.id || 'closed'} {...props} />
+);
+
+const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onClose, isOdia }) => {
+  const [reportOpen, setReportOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
 
   if (!listing) return null;
+  if (reportOpen) return <ReportModal listing={listing} isOdia={isOdia} onClose={() => setReportOpen(false)} />;
 
   const images = listing.images || [];
   const cleanPhone = (listing.whatsapp_number || listing.contact_phone).replace(/\D/g, '');
@@ -210,6 +217,9 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
             </div>
           </div>
 
+          <button type="button" onClick={() => setReportOpen(true)} className="mt-4 w-full rounded-lg px-3 py-2 text-xs text-slate-500 hover:bg-red-50 hover:text-red-700">
+            🚩 {isOdia ? 'ନକଲି ବିଜ୍ଞାପନ / ଠକେଇ ରିପୋର୍ଟ କରନ୍ତୁ' : 'Report fake listing / scam'}
+          </button>
         </div>
       </div>
     </div>
