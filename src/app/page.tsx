@@ -20,6 +20,11 @@ export default function Home() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   // Filter States
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setClock(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('Balasore');
   const [selectedLocality, setSelectedLocality] = useState('All');
@@ -54,6 +59,7 @@ export default function Home() {
   // Filter logic
   const filteredListings = useMemo(() => {
     return listings.filter((item) => {
+      if (item.expires_at && Date.parse(item.expires_at) <= clock) return false;
       // District filter
       if (selectedDistrict !== 'All') {
         const cleanSelected = selectedDistrict.split(' ')[0].toLowerCase();
@@ -91,7 +97,7 @@ export default function Home() {
 
       return true;
     });
-  }, [listings, selectedDistrict, selectedLocality, selectedCategory, maxRent, searchQuery]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, maxRent, searchQuery, clock]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 sm:pb-12">
@@ -182,7 +188,7 @@ export default function Home() {
         </div>
       </section>
 
-      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : 'Your listing has been submitted. It will appear after admin approval.'}</p>}
+      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : 'Your listing has been submitted. Please confirm your email. It will appear after admin approval and expire after 30 days.'}</p>}
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         

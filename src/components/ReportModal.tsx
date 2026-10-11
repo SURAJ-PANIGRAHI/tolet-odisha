@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { supabase, type Listing } from '@/lib/supabase';
+import { type Listing } from '@/lib/supabase';
 
 const reasons = [
   ['fake', 'Fake / Non-existent listing', 'ନକଲି ବିଜ୍ଞାପନ'],
@@ -46,25 +46,26 @@ export function ReportModal({ listing, onClose, isOdia }: { listing: Listing; on
     if (submitLock.current || saved) return;
     submitLock.current = true; setBusy(true); setError('');
     try {
-      const { error: insertError } = await supabase.from('reports').insert({ listing_id: listing.id, reason, description: note.trim() || null });
-      if (insertError) throw insertError;
+      const response = await fetch('/api/reports', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_id: listing.id, reason, description: note.trim() || null }),
+      });
+      if (!response.ok) throw new Error('Report failed');
       setSaved(true);
     } catch {
-      setError(isOdia ? 'ରିପୋର୍ଟ ସଞ୍ଚୟ ହୋଇପାରିଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ କିମ୍ବା ଇମେଲ୍ କରନ୍ତୁ।' : 'Your report could not be saved. Please retry, or email the administrator directly.');
+      setError(isOdia ? 'ରିପୋର୍ଟ ସଞ୍ଚୟ ହୋଇପାରିଲା ନାହିଁ। ପରେ ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।' : 'Your report could not be saved. Please try again later.');
     } finally { submitLock.current = false; setBusy(false); }
   }
 
-  const label = reasons.find(item => item[0] === reason)?.[1] || reason;
-  const email = `mailto:surajpanigrahi.95@gmail.com?subject=${encodeURIComponent(`ToLet Odisha report: ${label}`)}&body=${encodeURIComponent(`Listing: ${listing.title}\nListing ID: ${listing.id}\nLocation: ${listing.locality}, ${listing.district}\nReason: ${label}\nNote: ${note.trim() || '(none)'}\nDatabase record: ${saved ? 'saved' : 'not saved'}\nWebsite: https://www.toletodisha.in\nPlease review this listing.`)}`;
   return <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
     <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title" className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 space-y-4">
       <div className="flex items-center justify-between gap-3"><h2 id="report-title" className="text-lg font-bold">{isOdia ? 'ବିଜ୍ଞାପନ ରିପୋର୍ଟ କରନ୍ତୁ' : 'Report this listing'}</h2><button type="button" disabled={busy} aria-label="Close report" onClick={onClose} className="rounded border px-3 py-2">✕</button></div>
       <p className="text-sm text-slate-600">{listing.title}</p>
-      {saved ? <div role="status" className="space-y-3"><p>{isOdia ? 'ରିପୋର୍ଟ ସଞ୍ଚୟ ହୋଇଛି। ପ୍ରଶାସକ ସମୀକ୍ଷା କରିବେ।' : 'Your report is saved for administrator review.'}</p><a href={email} className="inline-block rounded-lg bg-[#005B94] px-4 py-2 text-white">{isOdia ? 'ଇମେଲ୍ ପଠାନ୍ତୁ' : 'Open pre-filled email'}</a><p className="text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ଆପ୍‌ରେ Send ଦବାନ୍ତୁ।' : 'Press Send in your email app. Saving a report does not send an automatic email.'}</p></div> : <form onSubmit={submit} className="space-y-4">
+      {saved ? <div role="status" className="space-y-3"><p>{isOdia ? 'ରିପୋର୍ଟ ସଞ୍ଚୟ ହୋଇଛି। ପ୍ରଶାସକ ସମୀକ୍ଷା କରିବେ।' : 'Thank you. Your report has been saved and a notification queued for review.'}</p></div> : <form onSubmit={submit} className="space-y-4">
         <label className="block text-sm font-semibold">{isOdia ? 'କାରଣ' : 'Reason'}<select value={reason} disabled={busy} onChange={event => setReason(event.target.value)} className="mt-1 block w-full rounded-lg border p-3">{reasons.map(item => <option key={item[0]} value={item[0]}>{isOdia ? item[2] : item[1]}</option>)}</select></label>
         <label className="block text-sm font-semibold">{isOdia ? 'ବିବରଣୀ' : `Details ${reason === 'other' ? '(required)' : '(optional)'}`}<textarea value={note} disabled={busy} required={reason === 'other'} maxLength={1000} rows={4} onChange={event => setNote(event.target.value)} className="mt-1 block w-full rounded-lg border p-3" /></label>
         <p className="text-xs text-slate-500">{isOdia ? 'ପାସୱାର୍ଡ କିମ୍ବା ବ୍ୟାଙ୍କ ତଥ୍ୟ ଲେଖନ୍ତୁ ନାହିଁ।' : 'Describe the issue without passwords, bank details or other sensitive information. Reports are visible only to administrators.'}</p>
-        {error && <div role="alert" className="text-sm text-red-700">{error} <a className="underline" href={email}>Email administrator</a></div>}
+        {error && <div role="alert" className="text-sm text-red-700">{error}</div>}
         <button type="submit" disabled={busy || (reason === 'other' && !note.trim())} className="rounded-lg bg-[#005B94] px-4 py-3 text-white disabled:opacity-50">{busy ? (isOdia ? 'ସଞ୍ଚୟ ହେଉଛି…' : 'Saving…') : (isOdia ? 'ରିପୋର୍ଟ ଦାଖଲ କରନ୍ତୁ' : 'Submit report')}</button>
       </form>}
     </div>

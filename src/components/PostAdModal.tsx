@@ -22,6 +22,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [district, setDistrict] = useState(ODISHA_DISTRICTS.find(d => d.startsWith('Balasore')) || ODISHA_DISTRICTS[0]);
   const [locality, setLocality] = useState('');
   const [landmark, setLandmark] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -53,7 +54,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     e.preventDefault();
     setErrorMsg('');
 
-    if (!title || !rent || !district || !locality || !contactName || !contactPhone) {
+    if (!title || !rent || !district || !locality || !contactName || !contactPhone || !contactEmail) {
       setErrorMsg(isOdia ? 'ଦୟାକରି ସମସ୍ତ ଆବଶ୍ୟକୀୟ ତଥ୍ୟ ପୂରଣ କରନ୍ତୁ।' : 'Please fill all required fields.');
       return;
     }
@@ -94,7 +95,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       }
 
       // Insert listing into Supabase
-      const { error: insertError } = await supabase.from('listings').insert([
+      const response = await fetch('/api/listings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: contactEmail, listing:
         {
           title,
           description: description || null,
@@ -112,10 +115,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           is_active: false,
           is_featured: false
         }
-      ]);
-
-      if (insertError) {
-        throw insertError;
+      }),
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Unable to submit listing');
       }
 
       onSuccess();
@@ -330,6 +334,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="owner-email">{isOdia ? 'ଆପଣଙ୍କ ଇମେଲ୍ *' : 'Your email *'}</label>
+            <input id="owner-email" type="email" required maxLength={254} value={contactEmail} onChange={event => setContactEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm" />
+            <p className="mt-1 text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ନିଶ୍ଚିତ କରନ୍ତୁ। ୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ; ନବୀକରଣ ପାଇଁ ଇମେଲ୍ ମିଳିବ।' : 'Confirm your email for expiry reminders. Your email stays private. Listings expire after 30 days; renew by email if still available.'}</p>
+          </div>
           {/* Amenities Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
