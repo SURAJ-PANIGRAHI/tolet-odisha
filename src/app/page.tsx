@@ -276,13 +276,13 @@ export default function Home() {
                 />
                 {/* Insert Sponsor Banner after the 2nd listing */}
                 {index === 1 && (
-                  <SponsorBanner isOdia={isOdia} />
+                  <SponsorBanner district={selectedDistrict} isOdia={isOdia} />
                 )}
               </React.Fragment>
             ))}
             {/* If fewer than 2 listings, show sponsor banner at the end */}
             {filteredListings.length < 2 && (
-              <SponsorBanner isOdia={isOdia} />
+              <SponsorBanner district={selectedDistrict} isOdia={isOdia} />
             )}
           </div>
         )}
