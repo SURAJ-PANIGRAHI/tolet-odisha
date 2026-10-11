@@ -6,8 +6,8 @@ import { Navbar } from '@/components/Navbar';
 import { ListingCard } from '@/components/ListingCard';
 import { ListingDetailModal } from '@/components/ListingDetailModal';
 import { PostAdModal } from '@/components/PostAdModal';
-import { ODISHA_DISTRICTS, CATEGORIES } from '@/data/odisha';
-import { Search, MapPin, Filter, PlusCircle, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES } from '@/data/odisha';
+import { Search, MapPin, PlusCircle, Sparkles, AlertCircle, RefreshCw, Navigation } from 'lucide-react';
 
 export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -18,7 +18,8 @@ export default function Home() {
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState('All');
+  const [selectedDistrict, setSelectedDistrict] = useState('Balasore');
+  const [selectedLocality, setSelectedLocality] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [maxRent, setMaxRent] = useState<number>(10000);
 
@@ -45,6 +46,12 @@ export default function Home() {
     fetchListings();
   }, []);
 
+  // Available localities for current district
+  const availableLocalities = useMemo(() => {
+    const cleanDist = selectedDistrict.split(' ')[0];
+    return DISTRICT_LOCALITIES[cleanDist] || [];
+  }, [selectedDistrict]);
+
   // Filter logic
   const filteredListings = useMemo(() => {
     return listings.filter((item) => {
@@ -52,6 +59,13 @@ export default function Home() {
       if (selectedDistrict !== 'All') {
         const cleanSelected = selectedDistrict.split(' ')[0].toLowerCase();
         if (!item.district.toLowerCase().includes(cleanSelected)) return false;
+      }
+
+      // Locality dropdown filter
+      if (selectedLocality !== 'All') {
+        if (!item.locality.toLowerCase().includes(selectedLocality.toLowerCase())) {
+          return false;
+        }
       }
 
       // Category filter
@@ -64,7 +78,7 @@ export default function Home() {
         return false;
       }
 
-      // Search query (matches title, locality, landmark, description)
+      // Search query
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase();
         const matchesTitle = item.title.toLowerCase().includes(q);
@@ -78,10 +92,10 @@ export default function Home() {
 
       return true;
     });
-  }, [listings, selectedDistrict, selectedCategory, maxRent, searchQuery]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, maxRent, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-gray-900 pb-20 sm:pb-12">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 sm:pb-12">
       {/* Navigation */}
       <Navbar
         isOdia={isOdia}
@@ -89,60 +103,122 @@ export default function Home() {
         onOpenPostModal={() => setIsPostModalOpen(true)}
       />
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-emerald-50 via-teal-50/30 to-transparent pt-8 pb-6 px-4 sm:px-6">
+      {/* Hero Section - KLM Royal Blue Theme */}
+      <section className="bg-gradient-to-b from-[#E6F4FA] via-[#F0F8FC] to-transparent pt-8 pb-6 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{isOdia ? 'ବାଲେଶ୍ୱର ଓ ସମଗ୍ର ଓଡ଼ିଶାର ଘର ଭଡ଼ା' : 'Balasore & All-Odisha Direct Rental Hub'}</span>
+          
+          {/* Punchy Trust Tagline */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-[#005B94] border border-[#005B94]/20 text-xs font-bold shadow-2xs mb-3.5">
+            <Sparkles className="w-4 h-4 text-[#00A1DE]" />
+            <span>
+              {isOdia 
+                ? '✨ ୧୦୦% ସିଧାସଳଖ ଘର ମାଲିକ • ଶୂନ ଦଲାଲି ଓ ହିଡେନ୍ ଚାର୍ଜ' 
+                : '✨ 100% Direct Owners • Zero Brokerage & No Middlemen'}
+            </span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black text-gray-950 tracking-tight">
-            {isOdia ? 'ଘର, ମେସ୍, ହଷ୍ଟେଲ୍ ଖୋଜନ୍ତୁ ବିନା ଦଲାଲିରେ' : 'Rent Rooms, Mess & Hostels Without Brokerage'}
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            {isOdia ? 'ଘର, ମେସ୍ ଓ ହଷ୍ଟେଲ୍ ଖୋଜନ୍ତୁ ବିନା ଦଲାଲିରେ' : 'Rent Rooms, Mess & Hostels Directly'}
           </h1>
-          <p className="text-gray-600 text-xs sm:text-sm mt-2 max-w-xl mx-auto">
+          <p className="text-slate-600 text-xs sm:text-sm mt-2.5 max-w-xl mx-auto font-medium">
             {isOdia
-              ? 'ଓଡ଼ିଶାରେ ଛାତ୍ର, ଚାକିରିଆ ଓ ପରିବାର ପାଇଁ ମାଗଣା ଟୁ-ଲେଟ୍ ସେବା। ସିଧା ମାଲିକଙ୍କୁ WhatsApp କରନ୍ତୁ।'
-              : 'Direct owner contact for students, bachelors & families. Zero commission. WhatsApp landlord instantly.'}
+              ? 'ବାଲେଶ୍ୱର ଓ ଓଡ଼ିଶାର ଛାତ୍ର, ଚାକିରିଆ ଓ ପରିବାର ପାଇଁ ମାଗଣା ପୋର୍ଟାଲ୍। ସିଧା ମାଲିକଙ୍କ ସହ WhatsApp କରନ୍ତୁ।'
+              : 'Direct owner contact for students, bachelors & families in Balasore & across Odisha. Instant WhatsApp chat.'}
           </p>
 
-          {/* Search & Quick Filters Box */}
-          <div className="mt-6 bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto flex flex-col sm:flex-row gap-2.5">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder={isOdia ? 'ସ୍ଥାନ ବା କଲେଜ ଖୋଜନ୍ତୁ (e.g. Nalamganj, FM College)...' : 'Search locality, landmark, college...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs sm:text-sm focus:outline-emerald-600"
-              />
+          {/* Search & Area Filter Bar */}
+          <div className="mt-6 bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 max-w-3xl mx-auto flex flex-col gap-2.5">
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              {/* District Selector */}
+              <div className="relative sm:w-52">
+                <MapPin className="w-4 h-4 text-[#005B94] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => {
+                    setSelectedDistrict(e.target.value);
+                    setSelectedLocality('All');
+                  }}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94] appearance-none font-bold text-slate-900 cursor-pointer"
+                >
+                  <option value="Balasore">Balasore (ବାଲେଶ୍ୱର)</option>
+                  <option value="All">{isOdia ? 'ସମସ୍ତ ଓଡ଼ିଶା (All)' : 'All Odisha'}</option>
+                  {ODISHA_DISTRICTS.filter(d => !d.startsWith('Balasore')).map((dist, idx) => (
+                    <option key={idx} value={dist.split(' ')[0]}>
+                      {dist}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Locality Selector Dropdown */}
+              {availableLocalities.length > 0 && (
+                <div className="relative sm:w-52">
+                  <Navigation className="w-3.5 h-3.5 text-[#00A1DE] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <select
+                    value={selectedLocality}
+                    onChange={(e) => setSelectedLocality(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94] appearance-none font-semibold text-slate-800 cursor-pointer"
+                  >
+                    <option value="All">{isOdia ? 'ସମସ୍ତ ଅଞ୍ଚଳ (All Areas)' : 'All Localities / Areas'}</option>
+                    {availableLocalities.map((loc, idx) => (
+                      <option key={idx} value={loc}>
+                        {loc}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Search Keywords Input */}
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder={isOdia ? 'କଲେଜ ବା ନିକଟବର୍ତ୍ତୀ ସ୍ଥାନ ଖୋଜନ୍ତୁ...' : 'Search college, landmark, room type...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-[#005B94]"
+                />
+              </div>
             </div>
 
-            {/* District Selector */}
-            <div className="relative sm:w-48">
-              <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full pl-8 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs sm:text-sm focus:outline-emerald-600 appearance-none font-semibold text-gray-800"
-              >
-                <option value="All">{isOdia ? 'ସମସ୍ତ ଓଡ଼ିଶା (All)' : 'All Odisha'}</option>
-                <option value="Balasore">Balasore (ବାଲେଶ୍ୱର)</option>
-                {ODISHA_DISTRICTS.filter(d => !d.startsWith('Balasore')).map((dist, idx) => (
-                  <option key={idx} value={dist.split(' ')[0]}>
-                    {dist}
-                  </option>
+            {/* Quick Locality Pills for Balasore */}
+            {availableLocalities.length > 0 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-1 scrollbar-none border-t border-slate-100">
+                <span className="text-[11px] font-bold text-slate-400 shrink-0 mr-1">
+                  {isOdia ? 'ଲୋକପ୍ରିୟ ଅଞ୍ଚଳ:' : 'Popular Areas:'}
+                </span>
+                <button
+                  onClick={() => setSelectedLocality('All')}
+                  className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition shrink-0 cursor-pointer ${
+                    selectedLocality === 'All'
+                      ? 'bg-[#005B94] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  All
+                </button>
+                {availableLocalities.slice(0, 8).map((loc, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedLocality(loc)}
+                    className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold transition shrink-0 cursor-pointer ${
+                      selectedLocality === loc
+                        ? 'bg-[#005B94] text-white font-bold'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {loc}
+                  </button>
                 ))}
-              </select>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
         
         {/* Category Pills Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -152,10 +228,10 @@ export default function Home() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer shrink-0 ${
+                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer shrink-0 ${
                   isSelected
-                    ? 'bg-gray-900 text-white shadow-xs'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                    ? 'bg-[#005B94] text-white shadow-xs'
+                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 {isOdia ? cat.labelOdia : cat.label}
@@ -164,23 +240,23 @@ export default function Home() {
           })}
         </div>
 
-        {/* Results Info & Filter Controls */}
+        {/* Results Header & Max Rent Slider */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6 mb-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-black text-gray-900">
+            <h2 className="text-base sm:text-lg font-black text-slate-900">
               {isOdia ? 'ଉପଲବ୍ଧ ବିଜ୍ଞାପନ' : 'Available Listings'}
             </h2>
-            <span className="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-bold bg-[#E6F4FA] text-[#005B94] px-2.5 py-0.5 rounded-full">
               {filteredListings.length}
             </span>
           </div>
 
           {/* Max Rent Filter Slider */}
-          <div className="flex items-center gap-3 bg-white px-3.5 py-1.5 rounded-xl border border-gray-100 text-xs">
-            <span className="text-gray-500 font-medium">
+          <div className="flex items-center gap-3 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200/80 text-xs shadow-2xs">
+            <span className="text-slate-500 font-medium">
               {isOdia ? 'ସର୍ବାଧିକ ଭଡ଼ା:' : 'Max Rent:'}
             </span>
-            <span className="font-bold text-gray-900">₹{maxRent.toLocaleString('en-IN')}</span>
+            <span className="font-black text-[#005B94]">₹{maxRent.toLocaleString('en-IN')}</span>
             <input
               type="range"
               min="1000"
@@ -188,7 +264,7 @@ export default function Home() {
               step="500"
               value={maxRent}
               onChange={(e) => setMaxRent(Number(e.target.value))}
-              className="accent-emerald-600 w-24 sm:w-32 cursor-pointer"
+              className="accent-[#005B94] w-24 sm:w-32 cursor-pointer"
             />
           </div>
         </div>
@@ -196,27 +272,27 @@ export default function Home() {
         {/* Listings Grid */}
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center text-center">
-            <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mb-3" />
-            <p className="text-sm font-semibold text-gray-600">
-              {isOdia ? 'ତଥ୍ୟ ଲୋଡ୍ ହେଉଛି...' : 'Loading listings from Odisha...'}
+            <RefreshCw className="w-8 h-8 text-[#005B94] animate-spin mb-3" />
+            <p className="text-sm font-semibold text-slate-600">
+              {isOdia ? 'ତଥ୍ୟ ଲୋଡ୍ ହେଉଛି...' : 'Loading listings...'}
             </p>
           </div>
         ) : filteredListings.length === 0 ? (
-          <div className="bg-white rounded-3xl p-8 sm:p-12 text-center max-w-lg mx-auto border border-gray-100 my-8 shadow-xs">
+          <div className="bg-white rounded-3xl p-8 sm:p-12 text-center max-w-lg mx-auto border border-slate-200 my-8 shadow-xs">
             <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3">
               <AlertCircle className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
-              {isOdia ? 'ଏହି ଅଞ୍ଚଳରେ କୌଣସି ବିଜ୍ଞାପନ ମିଳିଲା ନାହିଁ' : 'No listings found for this filter'}
+            <h3 className="text-lg font-bold text-slate-900 mb-1">
+              {isOdia ? 'ଏହି ଅଞ୍ଚଳରେ କୌଣସି ବିଜ୍ଞାପନ ମିଳିଲା ନାହିଁ' : 'No listings found for this selection'}
             </h3>
-            <p className="text-xs text-gray-500 mb-5">
+            <p className="text-xs text-slate-500 mb-5">
               {isOdia
                 ? 'ଆପଣ ଏହି ସ୍ଥାନର ପ୍ରଥମ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରିପାରିବେ!'
-                : 'Try adjusting your filters or be the first to post a room here!'}
+                : 'Try clearing some filters or be the first to post a room here!'}
             </p>
             <button
               onClick={() => setIsPostModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#005B94] hover:bg-[#004A7C] text-white text-xs font-bold transition shadow-sm cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
               <span>{isOdia ? 'ମାଗଣା ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Post Free Listing'}</span>
@@ -241,7 +317,7 @@ export default function Home() {
       <div className="sm:hidden fixed bottom-4 right-4 z-30">
         <button
           onClick={() => setIsPostModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-lg shadow-emerald-600/40 active:scale-95 transition"
+          className="flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#005B94] hover:bg-[#004A7C] text-white font-bold text-xs shadow-lg shadow-[#005B94]/40 active:scale-95 transition cursor-pointer"
         >
           <PlusCircle className="w-4 h-4" />
           <span>{isOdia ? 'ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Post Free Ad'}</span>

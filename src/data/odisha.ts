@@ -30,23 +30,61 @@ export const ODISHA_DISTRICTS = [
   'Boudh (ବୌଦ୍ଧ)'
 ];
 
-export const BALASORE_LOCALITIES = [
-  'Nalamganj',
-  'Angargadia',
-  'Sahadevkhunta',
-  'Station Bazaar',
-  'Motiganj',
-  'Cinema Chhaka',
-  'FM College Road',
-  'Remuna',
-  'Gopalpur',
-  'Sunhat',
-  'Sovarampur',
-  'OT Road',
-  'Phandi Chhaka',
-  'Kuruda',
-  'Balia'
-];
+export const DISTRICT_LOCALITIES: Record<string, string[]> = {
+  'Balasore': [
+    'Nalamganj',
+    'Angargadia',
+    'Sahadevkhunta',
+    'Station Bazaar',
+    'Motiganj',
+    'Cinema Chhaka',
+    'FM College Road',
+    'Remuna',
+    'Gopalpur',
+    'Sunhat',
+    'Sovarampur',
+    'OT Road',
+    'Phandi Chhaka',
+    'Kuruda',
+    'Balia',
+    'Noonachhati'
+  ],
+  'Khordha / Bhubaneswar': [
+    'Patia',
+    'Khandagiri',
+    'Jayadev Vihar',
+    'Saheed Nagar',
+    'Nayapalli',
+    'Chandrasekharpur',
+    'Acharya Vihar',
+    'Old Town',
+    'Rasulgarh',
+    'KIIT Road'
+  ],
+  'Cuttack': [
+    'Badambadi',
+    'College Square',
+    'Madhupatna',
+    'CDA Sector',
+    'Ranihat',
+    'Chandi Mandir Chhaka',
+    'Buxi Bazaar',
+    'Mangalabag'
+  ],
+  'Bhadrak': [
+    'Charampa',
+    'Bhadrak Town',
+    'Bonth Chhaka',
+    'Arnapal',
+    'Gelpur'
+  ],
+  'Mayurbhanj': [
+    'Baripada Town',
+    'Baghra Road',
+    'Takhatpur',
+    'Station Road'
+  ]
+};
 
 export const CATEGORIES = [
   { id: 'All', label: 'All Listings', labelOdia: 'ସବୁ ବିଜ୍ଞାପନ' },

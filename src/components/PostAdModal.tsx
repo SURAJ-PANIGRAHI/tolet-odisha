@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ODISHA_DISTRICTS, BALASORE_LOCALITIES, CATEGORIES, POPULAR_AMENITIES } from '@/data/odisha';
+import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES, POPULAR_AMENITIES } from '@/data/odisha';
 import { X, Upload, Check, Loader2, Sparkles } from 'lucide-react';
 
 interface PostAdModalProps {
@@ -29,6 +29,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
+
+  const currentLocalities = DISTRICT_LOCALITIES[district.split(' ')[0]] || [];
 
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
@@ -85,7 +87,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           category,
           rent_monthly: parseInt(rent, 10),
           deposit: deposit ? parseInt(deposit, 10) : 0,
-          district: district.split(' ')[0], // clean district name
+          district: district.split(' ')[0],
           locality,
           landmark: landmark || null,
           contact_name: contactName,
@@ -118,19 +120,19 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-lg font-extrabold text-gray-900 flex items-center gap-1.5">
-              <Sparkles className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-1.5">
+              <Sparkles className="w-5 h-5 text-[#005B94]" />
               <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : 'Post Free Advertisement'}</span>
             </h2>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500 font-medium">
               {isOdia ? '୧୦୦% ମାଗଣା • ତୁରନ୍ତ ଲାଇଭ୍ ହୁଏ' : '100% Free • Goes live instantly'}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -146,7 +148,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               {isOdia ? 'ବିଜ୍ଞାପନର ଶୀର୍ଷକ *' : 'Ad Title *'}
             </label>
             <input
@@ -155,19 +157,19 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               {isOdia ? 'ବର୍ଗ (Category) *' : 'Category *'}
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600 bg-white"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
             >
               {CATEGORIES.filter(c => c.id !== 'All').map((cat) => (
                 <option key={cat.id} value={cat.id}>
@@ -180,7 +182,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           {/* Rent & Deposit */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ମାସିକ ଭଡ଼ା (₹) *' : 'Monthly Rent (₹) *'}
               </label>
               <input
@@ -189,11 +191,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 value={rent}
                 onChange={(e) => setRent(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ଅଗ୍ରିମ ଟଙ୍କା (₹)' : 'Security Deposit (₹)'}
               </label>
               <input
@@ -201,7 +203,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 placeholder="0"
                 value={deposit}
                 onChange={(e) => setDeposit(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
               />
             </div>
           </div>
@@ -209,13 +211,16 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           {/* District & Locality */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ଜିଲ୍ଲା (District) *' : 'District *'}
               </label>
               <select
                 value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600 bg-white"
+                onChange={(e) => {
+                  setDistrict(e.target.value);
+                  setLocality('');
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
               >
                 {ODISHA_DISTRICTS.map((dist, idx) => (
                   <option key={idx} value={dist}>
@@ -225,38 +230,62 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ସ୍ଥାନ / ଅଞ୍ଚଳ (Locality) *' : 'Locality / Area *'}
               </label>
-              <input
-                type="text"
-                placeholder="e.g. Nalamganj"
-                value={locality}
-                onChange={(e) => setLocality(e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
-              />
+              {currentLocalities.length > 0 ? (
+                <div className="space-y-1.5">
+                  <select
+                    value={locality}
+                    onChange={(e) => setLocality(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
+                  >
+                    <option value="">Select Locality / Type below</option>
+                    {currentLocalities.map((loc, idx) => (
+                      <option key={idx} value={loc}>
+                        {loc}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or type custom area..."
+                    value={locality}
+                    onChange={(e) => setLocality(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-[#005B94]"
+                  />
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="e.g. Nalamganj"
+                  value={locality}
+                  onChange={(e) => setLocality(e.target.value)}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
+                />
+              )}
             </div>
           </div>
 
           {/* Landmark */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               {isOdia ? 'ନିକଟବର୍ତ୍ତୀ ସ୍ଥାନ (Landmark)' : 'Landmark (Optional)'}
             </label>
             <input
               type="text"
-              placeholder="e.g. Near Bus Stand, Opp. College"
+              placeholder="e.g. Near Bus Stand, Opp. FM College"
               value={landmark}
               onChange={(e) => setLandmark(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
             />
           </div>
 
           {/* Contact Details */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ଆପଣଙ୍କ ନାମ *' : 'Your Name *'}
               </label>
               <input
@@ -265,11 +294,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ମୋବାଇଲ୍ ନମ୍ବର *' : 'Mobile / WhatsApp *'}
               </label>
               <input
@@ -278,14 +307,14 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
               />
             </div>
           </div>
 
           {/* Amenities Selector */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
               {isOdia ? 'ଉପଲବ୍ଧ ସୁବିଧା (Amenities)' : 'Available Amenities'}
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -298,8 +327,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                     onClick={() => toggleAmenity(amenity)}
                     className={`text-xs px-2.5 py-1 rounded-full border transition flex items-center gap-1 cursor-pointer ${
                       isSelected
-                        ? 'bg-emerald-600 text-white border-emerald-600 font-semibold'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        ? 'bg-[#005B94] text-white border-[#005B94] font-semibold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3" />}
@@ -312,10 +341,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
           {/* Photo Upload */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               {isOdia ? 'ଫଟୋ ଅପଲୋଡ଼ କରନ୍ତୁ (ସର୍ବାଧିକ ୩ଟି)' : 'Upload Photos (Up to 3, Optional)'}
             </label>
-            <div className="border border-dashed border-gray-300 rounded-xl p-3 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
+            <div className="border border-dashed border-slate-300 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer">
               <input
                 type="file"
                 accept="image/*"
@@ -325,8 +354,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 id="photo-upload"
               />
               <label htmlFor="photo-upload" className="cursor-pointer flex flex-col items-center">
-                <Upload className="w-5 h-5 text-gray-400 mb-1" />
-                <span className="text-xs text-gray-600 font-medium">
+                <Upload className="w-5 h-5 text-slate-400 mb-1" />
+                <span className="text-xs text-slate-600 font-medium">
                   {imageFiles.length > 0 ? `${imageFiles.length} photo(s) selected` : 'Click to select room photos'}
                 </span>
               </label>
@@ -335,7 +364,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               {isOdia ? 'ଅତିରିକ୍ତ ବିବରଣୀ' : 'Additional Details (Optional)'}
             </label>
             <textarea
@@ -343,7 +372,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               placeholder="e.g. 24 hours water, independent gate, silent study environment..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:outline-emerald-600"
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
             />
           </div>
 
@@ -351,7 +380,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-sm shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-xl bg-[#005B94] hover:bg-[#004A7C] active:scale-98 text-white font-bold text-sm shadow-md shadow-[#005B94]/20 transition flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>
