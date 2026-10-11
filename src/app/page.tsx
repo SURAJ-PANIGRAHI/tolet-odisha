@@ -6,6 +6,7 @@ import { Navbar } from '@/components/Navbar';
 import { ListingCard } from '@/components/ListingCard';
 import { ListingDetailModal } from '@/components/ListingDetailModal';
 import { PostAdModal } from '@/components/PostAdModal';
+import { SponsorBanner } from '@/components/SponsorBanner';
 import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES } from '@/data/odisha';
 import { Search, MapPin, PlusCircle, Sparkles, AlertCircle, RefreshCw, Navigation } from 'lucide-react';
 
@@ -266,14 +267,23 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {filteredListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                isOdia={isOdia}
-                onSelect={(item) => setSelectedListing(item)}
-              />
+            {filteredListings.map((listing, index) => (
+              <React.Fragment key={listing.id}>
+                <ListingCard
+                  listing={listing}
+                  isOdia={isOdia}
+                  onSelect={(item) => setSelectedListing(item)}
+                />
+                {/* Insert Sponsor Banner after the 2nd listing */}
+                {index === 1 && (
+                  <SponsorBanner isOdia={isOdia} />
+                )}
+              </React.Fragment>
             ))}
+            {/* If fewer than 2 listings, show sponsor banner at the end */}
+            {filteredListings.length < 2 && (
+              <SponsorBanner isOdia={isOdia} />
+            )}
           </div>
         )}
 

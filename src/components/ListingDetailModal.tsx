@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Listing } from '@/lib/supabase';
-import { X, MapPin, Phone, MessageSquare, CheckCircle, User } from 'lucide-react';
+import { X, MapPin, Phone, MessageSquare, CheckCircle, User, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
 interface ListingDetailModalProps {
   listing: Listing | null;
@@ -11,12 +11,25 @@ interface ListingDetailModalProps {
 }
 
 export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing, onClose, isOdia }) => {
+  const [photoIndex, setPhotoIndex] = useState(0);
+
   if (!listing) return null;
 
+  const images = listing.images || [];
   const cleanPhone = (listing.whatsapp_number || listing.contact_phone).replace(/\D/g, '');
   const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(
     `Namaskar! I found your listing "${listing.title}" on ToLetOdisha. Is it still available?`
   )}`;
+
+  const nextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotoIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotoIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -27,23 +40,69 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({ listing,
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 flex items-center justify-center text-slate-700 shadow-md transition cursor-pointer"
+          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 flex items-center justify-center text-slate-700 shadow-md transition cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Photos if any */}
-        {listing.images && listing.images.length > 0 ? (
-          <div className="h-64 w-full bg-slate-100 relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={listing.images[0]}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full font-medium">
-              {listing.category}
+        {/* Photos Carousel (Supports up to 10 photos) */}
+        {images.length > 0 ? (
+          <div className="relative">
+            <div className="h-64 sm:h-72 w-full bg-slate-900 relative overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={images[photoIndex]}
+                alt={`${listing.title} - ${photoIndex + 1}`}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Category Badge */}
+              <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full font-medium z-10">
+                {listing.category}
+              </div>
+
+              {/* Photo Counter */}
+              <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white text-[11px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1 z-10">
+                <ImageIcon className="w-3 h-3" />
+                <span>{photoIndex + 1} / {images.length}</span>
+              </div>
+
+              {/* Carousel Left/Right Buttons */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={prevPhoto}
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition cursor-pointer z-10"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={nextPhoto}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition cursor-pointer z-10"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </div>
+
+            {/* Thumbnail Strip for Multi-Photos */}
+            {images.length > 1 && (
+              <div className="flex items-center gap-2 p-2.5 bg-slate-100 overflow-x-auto scrollbar-none border-b border-slate-200">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setPhotoIndex(idx)}
+                    className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border-2 transition cursor-pointer ${
+                      photoIndex === idx ? 'border-[#005B94] scale-105' : 'border-transparent opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-6 bg-gradient-to-r from-[#005B94] to-[#0077C8] text-white rounded-t-3xl">

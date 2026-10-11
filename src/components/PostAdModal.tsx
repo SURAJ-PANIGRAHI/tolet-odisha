@@ -40,9 +40,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files).slice(0, 3);
-      setImageFiles(files);
+      const newFiles = Array.from(e.target.files);
+      setImageFiles(prev => [...prev, ...newFiles].slice(0, 10));
     }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setImageFiles(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -342,16 +346,23 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
-          {/* Photo Upload */}
+          {/* Photo Upload (Up to 10 photos) */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              {isOdia ? 'ଫଟୋ ଅପଲୋଡ଼ କରନ୍ତୁ (ସର୍ବାଧିକ ୩ଟି)' : 'Upload Photos (Up to 3, Optional)'}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-slate-700">
+                {isOdia ? 'ଫଟୋ ଅପଲୋଡ଼ କରନ୍ତୁ (ସର୍ବାଧିକ ୧୦ଟି)' : 'Upload Photos (Up to 10)'}
+              </label>
+              <span className="text-[11px] text-slate-500 font-medium">
+                {imageFiles.length}/10
+              </span>
+            </div>
+            
             <div className="border border-dashed border-slate-300 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer">
               <input
                 type="file"
                 accept="image/*"
                 multiple
+                disabled={imageFiles.length >= 10}
                 onChange={handleImageChange}
                 className="hidden"
                 id="photo-upload"
@@ -359,10 +370,33 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               <label htmlFor="photo-upload" className="cursor-pointer flex flex-col items-center">
                 <Upload className="w-5 h-5 text-slate-400 mb-1" />
                 <span className="text-xs text-slate-600 font-medium">
-                  {imageFiles.length > 0 ? `${imageFiles.length} photo(s) selected` : 'Click to select room photos'}
+                  {imageFiles.length < 10 ? 'Click to select room/property photos' : 'Maximum 10 photos reached'}
                 </span>
               </label>
             </div>
+
+            {/* Preview Thumbnails */}
+            {imageFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2.5">
+                {imageFiles.map((file, idx) => (
+                  <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-bold shadow-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Description */}
