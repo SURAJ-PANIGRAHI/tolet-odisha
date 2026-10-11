@@ -28,8 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
                 ToLet<span className="text-[#005B94]">Odisha</span>
               </span>
             </div>
-            <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1 -mt-0.5">
-              <MapPin className="w-2.5 h-2.5 text-[#00A1DE]" />
+            <p className="text-[11px] font-medium text-slate-500 -mt-0.5">
               {isOdia ? 'ସିଧାସଳଖ ଘର ମାଲିକଙ୍କ ସହ କଥା ହୁଅନ୍ତୁ' : 'Direct Owner • Zero Brokerage'}
             </p>
           </div>
