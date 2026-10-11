@@ -1,32 +1,32 @@
 export const ODISHA_DISTRICTS = [
   'Balasore (ବାଲେଶ୍ୱର)',
   'Bhadrak (ଭଦ୍ରକ)',
-  'Mayurbhanj (ମୟୂରଭଞ୍ଜ)',
+  'Mayurbhanj / Baripada (ମୟୂରଭଞ୍ଜ)',
   'Khordha / Bhubaneswar (ଖୋର୍ଦ୍ଧା)',
   'Cuttack (କଟକ)',
   'Puri (ପୁରୀ)',
-  'Ganjam (ଗଞ୍ଜାମ)',
+  'Ganjam / Berhampur (ଗଞ୍ଜାମ)',
   'Sambalpur (ସମ୍ବଲପୁର)',
-  'Rourkela / Sundargarh (ସୁନ୍ଦରଗଡ଼)',
+  'Sundargarh / Rourkela (ସୁନ୍ଦରଗଡ଼)',
   'Angul (ଅନୁଗୋଳ)',
   'Balangir (ବଲାଙ୍ଗୀର)',
   'Bargarh (ବରଗଡ଼)',
   'Dhenkanal (ଢେଙ୍କାନାଳ)',
   'Jajpur (ଯାଜପୁର)',
   'Jharsuguda (ଝାରସୁଗୁଡ଼ା)',
-  'Kalahandi (କଳାହାଣ୍ଡି)',
-  'Kandhamal (କନ୍ଧମାଳ)',
+  'Kalahandi / Bhawanipatna (କଳାହାଣ୍ଡି)',
+  'Kandhamal / Phulbani (କନ୍ଧମାଳ)',
   'Kendrapara (କେନ୍ଦ୍ରାପଡ଼ା)',
   'Keonjhar (କେନ୍ଦୁଝର)',
-  'Koraput (କୋରାପୁଟ)',
+  'Koraput / Jeypore (କୋରାପୁଟ)',
   'Malkangiri (ମାଲକାନଗିରି)',
   'Nabarangpur (ନବରଙ୍ଗପୁର)',
   'Nayagarh (ନୟାଗଡ଼)',
   'Nuapada (ନୂଆପଡ଼ା)',
   'Rayagada (ରାୟଗଡ଼ା)',
-  'Subarnapur (ସୁବର୍ଣ୍ଣପୁର)',
+  'Subarnapur / Sonepur (ସୁବର୍ଣ୍ଣପୁର)',
   'Deogarh (ଦେବଗଡ଼)',
-  'Gajapati (ଗଜପତି)',
+  'Gajapati / Paralakhemundi (ଗଜପତି)',
   'Boudh (ବୌଦ୍ଧ)'
 ];
 
@@ -47,9 +47,14 @@ export const DISTRICT_LOCALITIES: Record<string, string[]> = {
     'Phandi Chhaka',
     'Kuruda',
     'Balia',
-    'Noonachhati'
+    'Noonachhati',
+    'Soro',
+    'Jaleswar',
+    'Basta',
+    'Nilagiri',
+    'Other / ଅନ୍ୟାନ୍ୟ'
   ],
-  'Khordha / Bhubaneswar': [
+  'Khordha': [
     'Patia',
     'Khandagiri',
     'Jayadev Vihar',
@@ -59,7 +64,10 @@ export const DISTRICT_LOCALITIES: Record<string, string[]> = {
     'Acharya Vihar',
     'Old Town',
     'Rasulgarh',
-    'KIIT Road'
+    'KIIT Road',
+    'Jatani',
+    'Khordha Town',
+    'Other / ଅନ୍ୟାନ୍ୟ'
   ],
   'Cuttack': [
     'Badambadi',
@@ -69,20 +77,79 @@ export const DISTRICT_LOCALITIES: Record<string, string[]> = {
     'Ranihat',
     'Chandi Mandir Chhaka',
     'Buxi Bazaar',
-    'Mangalabag'
+    'Mangalabag',
+    'Choudwar',
+    'Other / ଅନ୍ୟାନ୍ୟ'
+  ],
+  'Puri': [
+    'Grand Road (Bada Danda)',
+    'VIP Road',
+    'Sea Beach Road',
+    'Chandanpur',
+    'Konark',
+    'Pipili',
+    'Other / ଅନ୍ୟାନ୍ୟ'
   ],
   'Bhadrak': [
     'Charampa',
     'Bhadrak Town',
     'Bonth Chhaka',
     'Arnapal',
-    'Gelpur'
+    'Gelpur',
+    'Basudevpur',
+    'Chandabali',
+    'Other / ଅନ୍ୟାନ୍ୟ'
   ],
   'Mayurbhanj': [
     'Baripada Town',
     'Baghra Road',
     'Takhatpur',
-    'Station Road'
+    'Station Road',
+    'Rairangpur',
+    'Karanjia',
+    'Other / ଅନ୍ୟାନ୍ୟ'
+  ],
+  'Sambalpur': [
+    'Budharaja',
+    'Dhanupali',
+    'Ainthapali',
+    'Burla (VSSUT / VIMSAR)',
+    'Khetrajpur',
+    'Bareipali',
+    'Other / ଅନ୍ୟାନ୍ୟ'
+  ],
+  'Sundargarh': [
+    'Rourkela Sector Areas',
+    'Civil Township',
+    'Koel Nagar',
+    'Chhend Colony',
+    'Panposh',
+    'Uditnagar',
+    'Sundargarh Town',
+    'Other / ଅନ୍ୟାନ୍ୟ'
+  ],
+  'Ganjam': [
+    'Berhampur Town',
+    'Gosaninuagaon',
+    'Ankushpur',
+    'Courtpeta',
+    'Brahmapur Railway Station',
+    'Chhatrapur',
+    'Other / ଅନ୍ୟାନ୍ୟ'
+  ],
+  'Angul': [
+    'Angul Town',
+    'Talcher',
+    'Nalco Nagar',
+    'Banarpal',
+    'Other / ଅନ୍ୟାନ୍ୟ'
+  ],
+  'Jajpur': [
+    'Jajpur Road (Vyasanagar)',
+    'Jajpur Town',
+    'Kalinga Nagar',
+    'Chandikhol',
+    'Other / ଅନ୍ୟାନ୍ୟ'
   ]
 };
 

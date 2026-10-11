@@ -234,26 +234,29 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 {isOdia ? 'ସ୍ଥାନ / ଅଞ୍ଚଳ (Locality) *' : 'Locality / Area *'}
               </label>
               {currentLocalities.length > 0 ? (
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <select
                     value={locality}
                     onChange={(e) => setLocality(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
                   >
-                    <option value="">Select Locality / Type below</option>
+                    <option value="">Select Area / Block</option>
                     {currentLocalities.map((loc, idx) => (
                       <option key={idx} value={loc}>
                         {loc}
                       </option>
                     ))}
                   </select>
-                  <input
-                    type="text"
-                    placeholder="Or type custom area..."
-                    value={locality}
-                    onChange={(e) => setLocality(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-[#005B94]"
-                  />
+                  {(locality === 'Other / ଅନ୍ୟାନ୍ୟ' || !currentLocalities.includes(locality)) && (
+                    <input
+                      type="text"
+                      placeholder="Type your area, village or block name..."
+                      value={locality === 'Other / ଅନ୍ୟାନ୍ୟ' ? '' : locality}
+                      onChange={(e) => setLocality(e.target.value)}
+                      required
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-slate-50"
+                    />
+                  )}
                 </div>
               ) : (
                 <input
