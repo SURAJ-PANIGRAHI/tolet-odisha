@@ -313,6 +313,43 @@ export default function Home() {
         onSuccess={fetchListings}
         isOdia={isOdia}
       />
+      {/* Footer */}
+      <footer className="mt-16 border-t border-slate-200/80 bg-white py-10 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div>
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <span className="font-extrabold text-lg text-slate-900">
+                ToLet<span className="text-[#005B94]">Odisha</span>
+              </span>
+              <span className="text-xs text-slate-400">• Built for Odisha</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {isOdia 
+                ? 'ବାଲେଶ୍ୱର ଓ ଓଡ଼ିଶାରେ ଘର ଭଡ଼ା ଓ ହଷ୍ଟେଲ୍ ଖୋଜିବାର ବିଶ୍ୱସ୍ତ ମଞ୍ଚ।' 
+                : 'Direct student rooms, mess, hostels and flats without brokers in Balasore & across Odisha.'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+            <a
+              href="https://wa.me/919437159484?text=Namaskar%20Suraj!%20I%20want%20to%20advertise%20my%20business%20on%20ToLetOdisha."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#005B94] hover:underline flex items-center gap-1 font-bold"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>{isOdia ? 'ବ୍ୟବସାୟ ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Advertise Your Business'}</span>
+            </a>
+            <span className="text-slate-300">•</span>
+            <button
+              onClick={() => setIsPostModalOpen(true)}
+              className="hover:text-slate-900 cursor-pointer"
+            >
+              {isOdia ? 'ମାଗଣା ବିଜ୍ଞାପନ' : 'Post Free Ad'}
+            </button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

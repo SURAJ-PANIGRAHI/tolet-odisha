@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LOCAL_SPONSORS, LocalSponsor } from '@/data/sponsors';
-import { MessageSquare, Phone, Sparkles, ChevronLeft, ChevronRight, Store } from 'lucide-react';
+import { MessageSquare, Phone, Sparkles, Store } from 'lucide-react';
 
 interface SponsorBannerProps {
   district: string;
@@ -21,18 +21,17 @@ export const SponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia }
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % sponsorsList.length);
-    }, 20000); // 20 seconds
+    }, 20000);
 
     return () => clearInterval(timer);
   }, [sponsorsList.length]);
 
-  // WhatsApp link to platform owner (Suraj)
+  // Direct contact for platform promotion if no sponsor exists
   const myWhatsAppNumber = '9437159484';
   const advertiseUrl = `https://wa.me/91${myWhatsAppNumber}?text=${encodeURIComponent(
     `Namaskar Suraj! I saw ToLetOdisha and I want to advertise my local business in ${cleanDistrict} district.`
   )}`;
 
-  // If this district has an active sponsored business
   const currentSponsor: LocalSponsor | undefined = sponsorsList[currentIndex];
 
   return (
@@ -71,69 +70,82 @@ export const SponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia }
         {/* Content Body */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
           {currentSponsor ? (
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
-                <Store className="w-6 h-6" />
+            <>
+              {/* Sponsor Information - 100% Dedicated */}
+              <div className="flex items-start gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
+                  <Store className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
+                    {currentSponsor.businessName}
+                  </h4>
+                  <p className="text-xs font-semibold text-amber-900 mt-0.5">
+                    {currentSponsor.tagline}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                    {currentSponsor.description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
-                  {currentSponsor.businessName}
-                </h4>
-                <p className="text-xs font-semibold text-amber-900 mt-0.5">
-                  {currentSponsor.tagline}
-                </p>
-                <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                  {currentSponsor.description}
-                </p>
+
+              {/* Sponsor's Direct CTAs Only (No distraction) */}
+              <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                <a
+                  href={`https://wa.me/91${currentSponsor.whatsappNumber}?text=${encodeURIComponent(
+                    `Namaskar! I found your service "${currentSponsor.businessName}" on ToLetOdisha.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold transition shadow-xs cursor-pointer whitespace-nowrap"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>{currentSponsor.actionText}</span>
+                </a>
+
+                <a
+                  href={`tel:${currentSponsor.contactPhone}`}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer whitespace-nowrap shadow-2xs"
+                >
+                  <Phone className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Call</span>
+                </a>
               </div>
-            </div>
+            </>
           ) : (
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-xl bg-[#005B94] text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
-                <Store className="w-6 h-6" />
+            <>
+              {/* Fallback Invite When No Sponsor Exists */}
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-xl bg-[#005B94] text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
+                  <Store className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
+                    {isOdia 
+                      ? `${cleanDistrict}ର ବ୍ୟବସାୟୀଙ୍କ ପାଇଁ ସୁବର୍ଣ୍ଣ ସୁଯୋଗ!` 
+                      : `Promote Your Business in ${cleanDistrict}!`}
+                  </h4>
+                  <p className="text-xs text-slate-600 mt-1">
+                    {isOdia
+                      ? `ଆପଣଙ୍କ ରେଷ୍ଟୁରାଣ୍ଟ, କୋଚିଂ, ଟିଫିନ୍ କିମ୍ବା ଦୋକାନକୁ ${cleanDistrict}ର ହଜାର ହଜାର ଛାତ୍ର ଓ ପରିବାରଙ୍କ ନିକଟରେ ପହଞ୍ଚାନ୍ତୁ।`
+                      : `Get your restaurant, coaching, tiffin or transport service seen by thousands searching for rooms in ${cleanDistrict}.`}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
-                  {isOdia 
-                    ? `${cleanDistrict}ର ବ୍ୟବସାୟୀଙ୍କ ପାଇଁ ସୁବର୍ଣ୍ଣ ସୁଯୋଗ!` 
-                    : `Promote Your Business in ${cleanDistrict}!`}
-                </h4>
-                <p className="text-xs text-slate-600 mt-1">
-                  {isOdia
-                    ? `ଆପଣଙ୍କ ରେଷ୍ଟୁରାଣ୍ଟ, କୋଚିଂ, ଟିଫିନ୍ କିମ୍ବା ଦୋକାନକୁ ${cleanDistrict}ର ହଜାର ହଜାର ଛାତ୍ର ଓ ପରିବାରଙ୍କ ନିକଟରେ ପହଞ୍ଚାନ୍ତୁ।`
-                    : `Get your restaurant, coaching, tiffin or transport service seen by thousands searching for rooms in ${cleanDistrict}.`}
-                </p>
+
+              <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                <a
+                  href={advertiseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition shadow-xs cursor-pointer whitespace-nowrap"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{isOdia ? 'ଏଠାରେ ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Advertise With Us'}</span>
+                </a>
               </div>
-            </div>
+            </>
           )}
-
-          {/* Action CTAs */}
-          <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
-            {currentSponsor && (
-              <a
-                href={`https://wa.me/91${currentSponsor.whatsappNumber}?text=${encodeURIComponent(
-                  `Namaskar! I found your service on ToLetOdisha (${cleanDistrict}).`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold transition shadow-xs cursor-pointer whitespace-nowrap"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>{currentSponsor.actionText}</span>
-              </a>
-            )}
-
-            {/* Direct Link to Suraj's WhatsApp */}
-            <a
-              href={advertiseUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition shadow-xs cursor-pointer whitespace-nowrap"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>{isOdia ? 'ଏଠାରେ ବିଜ୍ଞାପନ ଦିଅନ୍ତୁ' : 'Advertise With Us'}</span>
-            </a>
-          </div>
 
         </div>
 

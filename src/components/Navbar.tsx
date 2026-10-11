@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, PlusCircle, Globe, MapPin } from 'lucide-react';
+import { Home, PlusCircle, Globe, MapPin, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
   isOdia: boolean;
@@ -37,10 +37,22 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Dedicated Advertise With Us Link */}
+          <a
+            href="https://wa.me/919437159484?text=Namaskar%20Suraj!%20I%20want%20to%20advertise%20my%20business%20on%20ToLetOdisha."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer"
+            title="Advertise your local restaurant, coaching or business"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <span>{isOdia ? 'ବ୍ୟବସାୟ ପ୍ରଚାର' : 'Advertise With Us'}</span>
+          </a>
+
           {/* Language Toggle */}
           <button
             onClick={() => setIsOdia(!isOdia)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
             title="Toggle Language"
           >
             <Globe className="w-3.5 h-3.5 text-slate-500" />
