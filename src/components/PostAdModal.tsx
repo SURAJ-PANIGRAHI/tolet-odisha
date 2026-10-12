@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES, POPULAR_AMENITIES } from '@/data/odisha';
 import { X, Upload, Check, Loader2, Sparkles } from 'lucide-react';
@@ -15,6 +15,19 @@ interface PostAdModalProps {
 export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuccess, isOdia }) => {
   const [loading, setLoading] = useState(false);
   const [managementPath, setManagementPath] = useState('');
+  const phoneOtpEnabled = process.env.NEXT_PUBLIC_PHONE_OTP_ENABLED === 'true';
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpMessage, setOtpMessage] = useState('');
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [phoneProof, setPhoneProof] = useState<{ phone: string; token: string } | null>(null);
+  const otpInFlight = useRef(false);
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = window.setTimeout(() => setOtpCooldown(value => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [otpCooldown]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
@@ -30,6 +43,22 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
 
+  async function phoneOtp(action: 'start' | 'verify') {
+    if (otpInFlight.current || (action === 'start' && otpCooldown > 0)) return;
+    const phone = contactPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    if (!/^[6-9]\d{9}$/.test(phone)) { setOtpMessage('Enter a valid Indian mobile number.'); return; }
+    otpInFlight.current = true;
+    setOtpBusy(true);
+    setOtpMessage('');
+    try {
+      const response = await fetch(`/api/phone/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, code: otpCode }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Unable to verify your phone.');
+      if (action === 'start') { setOtpSent(true); setOtpCooldown(60); setOtpMessage('OTP sent. Enter the code from your SMS.'); }
+      else { setPhoneProof({ phone, token: result.access_token }); setOtpMessage('Mobile number verified.'); }
+    } catch (error) { setOtpMessage(error instanceof Error ? error.message : 'Please retry.'); }
+    finally { otpInFlight.current = false; setOtpBusy(false); }
+  }
   if (!isOpen) return null;
   if (managementPath) return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
@@ -39,7 +68,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
         <label htmlFor="management-link" className="block font-semibold">{isOdia ? 'ଗୋପନୀୟ ଲିଙ୍କ୍' : 'Your private management link'}</label>
         <input id="management-link" readOnly value={`${window.location.origin}${managementPath}`} onFocus={event => event.currentTarget.select()} className="w-full rounded border p-3 text-sm" />
         <a href={managementPath} className="block text-[#005B94] underline">{isOdia ? 'ବିଜ୍ଞାପନ ପରିଚାଳନା କରନ୍ତୁ' : 'Open management page'}</a>
-        <p className="text-sm text-slate-600">{isOdia ? '୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : 'Your listing requires admin approval and expires after 30 days. Email is optional; renewal reminders require a verified email.'}</p>
+        <p className="text-sm text-slate-600">{isOdia ? '୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : (phoneOtpEnabled ? 'Your listing is live and expires after 30 days. Email is optional; a verified email receives a reminder three days before expiry.' : 'Your listing requires review and expires after 30 days. Email is optional; a verified email receives a reminder three days before expiry.')}</p>
         <button type="button" onClick={() => { setManagementPath(''); onClose(); }} className="rounded bg-[#005B94] px-5 py-3 text-white">{isOdia ? 'ସମାପ୍ତ' : 'Done — I have saved the link'}</button>
       </div>
     </div>
@@ -78,6 +107,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
       return;
     }
+    if (phoneOtpEnabled && (!phoneProof || phoneProof.phone !== phone)) { setErrorMsg('Verify your mobile number with OTP before posting.'); return; }
     if (imageFiles.some(file => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
       setErrorMsg('Photos must be JPEG, PNG or WebP and at most 5 MB each.');
       return;
@@ -110,7 +140,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
       // Insert listing into Supabase
       const response = await fetch('/api/listings', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(phoneOtpEnabled && phoneProof ? { Authorization: `Bearer ${phoneProof.token}` } : {}) },
         body: JSON.stringify({ email: contactEmail, listing:
         {
           title,
@@ -133,11 +163,15 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       });
       if (!response.ok) {
         const result = await response.json();
+        if (response.status === 401 && phoneOtpEnabled) { setPhoneProof(null); setOtpSent(false); setOtpMessage('Phone verification expired. Request a new OTP.'); }
         throw new Error(result.error || 'Unable to submit listing');
       }
 
       const result = await response.json();
       setManagementPath(result.management_path);
+      setPhoneProof(null);
+      setOtpSent(false);
+      setOtpCode('');
       onSuccess();
     } catch (err: unknown) {
       const error = err as { message?: string };
@@ -161,7 +195,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : 'Post Free Advertisement'}</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              {isOdia ? '୧୦୦% ମାଗଣା • ଅନୁମୋଦନ ପରେ ପ୍ରକାଶିତ ହେବ' : '100% Free • Published after admin approval'}
+              {isOdia ? '୧୦୦% ମାଗଣା • ଅନୁମୋଦନ ପରେ ପ୍ରକାଶିତ ହେବ' : (phoneOtpEnabled ? '100% Free • Goes live after mobile OTP verification' : '100% Free • Published after admin approval')}
             </p>
           </div>
           <button
@@ -342,17 +376,25 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 type="tel"
                 placeholder="9876543210"
                 value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
+                disabled={otpBusy || loading}
+                onChange={(e) => { setContactPhone(e.target.value); setPhoneProof(null); setOtpSent(false); setOtpCode(''); setOtpMessage(''); }}
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
               />
             </div>
           </div>
 
+          {phoneOtpEnabled && <section className="space-y-3 rounded-xl border border-slate-200 p-4" aria-label="Mobile OTP verification">
+            {phoneProof ? <p className="text-sm font-semibold text-green-700">Mobile number verified</p> : <>
+              <button type="button" disabled={otpBusy || loading || otpCooldown > 0} onClick={() => void phoneOtp('start')} className="rounded bg-[#005B94] px-4 py-2 text-sm text-white disabled:opacity-50">{otpCooldown > 0 ? `Resend in ${otpCooldown}s` : otpSent ? 'Resend OTP' : 'Send OTP'}</button>
+              {otpSent && <div className="flex flex-wrap items-end gap-3"><label htmlFor="phone-otp" className="text-xs font-bold">SMS code<input id="phone-otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={otpCode} disabled={otpBusy || loading} onChange={event => setOtpCode(event.target.value.replace(/\D/g, ''))} className="mt-1 block w-32 rounded border p-2 text-sm" /></label><button type="button" disabled={otpBusy || loading || otpCode.length !== 6} onClick={() => void phoneOtp('verify')} className="rounded border px-4 py-2 text-sm disabled:opacity-50">Verify OTP</button></div>}
+            </>}
+            <p role="status" className="text-xs text-slate-600">{otpBusy ? 'Processing…' : otpMessage}</p>
+          </section>}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="owner-email">{isOdia ? 'ଆପଣଙ୍କ ଇମେଲ୍ (ଇଚ୍ଛାଧୀନ)' : 'Your email (optional)'}</label>
             <input id="owner-email" type="email" maxLength={254} value={contactEmail} onChange={event => setContactEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm" />
-            <p className="mt-1 text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ଦେବା ବାଧ୍ୟତାମୂଳକ ନୁହେଁ। କେବଳ ନିଶ୍ଚିତ ଇମେଲ୍‌କୁ ନବୀକରଣ ସୂଚନା ମିଳିବ। ୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : 'Email is not required. Renewal reminders are sent only if you provide and verify an email. Without renewal, your ad is removed after 30 days.'}</p>
+            <p className="mt-1 text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ଦେବା ବାଧ୍ୟତାମୂଳକ ନୁହେଁ। କେବଳ ନିଶ୍ଚିତ ଇମେଲ୍‌କୁ ନବୀକରଣ ସୂଚନା ମିଳିବ। ୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : 'Email is not required. A renewal reminder is sent three days before expiry only if you provide and verify an email. Without renewal, your ad is removed after 30 days.'}</p>
           </div>
           {/* Amenities Selector */}
           <div>

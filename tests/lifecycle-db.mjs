@@ -19,6 +19,9 @@ id uuid primary key default gen_random_uuid(), created_at timestamptz default no
 for (const file of ['20261011_moderation.sql', '20261012_reports.sql', '20261012_automated_lifecycle.sql']) await db.exec(readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'));
 await db.exec(readFileSync(new URL('../supabase/rollout/optional_owner_email.sql', import.meta.url), 'utf8'));
 await db.exec(readFileSync(new URL('../supabase/rollout/owner_removal.sql', import.meta.url), 'utf8'));
+await db.exec(readFileSync(new URL('../supabase/rollout/three_day_reminders.sql', import.meta.url), 'utf8'));
+await db.exec(readFileSync(new URL('../supabase/rollout/phone_verified_posting.sql', import.meta.url), 'utf8'));
+const verifiedUser = (await db.query('insert into auth.users(id) values(gen_random_uuid()) returning id')).rows[0].id;
 const row = { title: 'Test property', category: 'Boys Mess', rent_monthly: 1000, deposit: 0, district: 'Balasore', locality: 'Test locality', contact_name: 'Test owner', contact_phone: '9876543210', whatsapp_number: '9876543210', amenities: [], images: [] };
 await db.exec('set role service_role');
 for (const email of [null, '', '   ']) {
@@ -30,6 +33,16 @@ for (const email of [null, '', '   ']) {
   assert.equal((await db.query('select count(*)::int as n from notification_jobs where listing_id=$1', [noEmailId])).rows[0].n, 0);
   await db.query('delete from listings where id=$1', [noEmailId]);
 }
+const phoneVerifiedId = (await db.query('select public.submit_phone_verified_listing($1::jsonb,$2,$3,$4,$5) as id',[JSON.stringify(row),null,'c'.repeat(64),verifiedUser,'+919876543210'])).rows[0].id;
+let published = (await db.query('select * from listings where id=$1',[phoneVerifiedId])).rows[0];
+assert.equal(published.is_active,true);assert.equal(published.moderation_status,'approved');assert.ok(published.phone_verified_at);
+assert.equal((await db.query('select count(*)::int as n from notification_jobs where listing_id=$1',[phoneVerifiedId])).rows[0].n,0);
+await assert.rejects(db.query('select public.submit_phone_verified_listing($1::jsonb,$2,$3,$4,$5)',[JSON.stringify(row),null,'c'.repeat(64),verifiedUser,'+919876543211']));
+await db.exec('set role anon');
+assert.equal((await db.query('select count(*)::int as n from listings where id=$1',[phoneVerifiedId])).rows[0].n,1);
+await assert.rejects(db.query('select public.submit_phone_verified_listing($1::jsonb,$2,$3,$4,$5)',[JSON.stringify(row),null,'c'.repeat(64),verifiedUser,'+919876543210']));
+await db.exec('reset role;set role service_role');
+await db.query('delete from listings where id=$1',[phoneVerifiedId]);
 const ownerHash = 'a'.repeat(64);
 const managedId = (await db.query('select public.submit_managed_listing($1::jsonb,$2,$3) as id', [JSON.stringify(row), 'test@example.com', ownerHash])).rows[0].id;
 const managedCycle = (await db.query('select expires_at from listings where id=$1',[managedId])).rows[0].expires_at.toISOString();
@@ -76,10 +89,14 @@ assert.equal((await db.query('select * from public.claim_notification_jobs(20,nu
 assert.equal((await db.query('select public.confirm_listing_owner($1,$2,false) as ok', [id, cycle])).rows[0].ok, true);
 assert.equal((await db.query('select public.confirm_listing_owner($1,$2,true) as ok', [id, cycle])).rows[0].ok, false, 'Cannot renew too early');
 await db.exec('reset role');
-const nearExpiry = new Date(Date.now() + 86400000).toISOString();
+const nearExpiry = new Date(Date.now() + 2.5 * 86400000).toISOString();
 await db.query('update listings set expires_at=$2 where id=$1', [id, nearExpiry]);
 await db.query('update listing_owner_contacts set cycle=$2 where listing_id=$1', [id, nearExpiry]);
 await db.exec('set role service_role');
+await db.query('update listing_owner_contacts set verified_at=null where listing_id=$1',[id]);
+await db.query('select public.run_listing_lifecycle()');
+assert.equal((await db.query("select count(*)::int as n from notification_jobs where kind='renewal'")).rows[0].n,0,'No reminders to unverified emails');
+await db.query('update listing_owner_contacts set verified_at=now() where listing_id=$1',[id]);
 await db.query('select public.run_listing_lifecycle()');
 await db.query('select public.run_listing_lifecycle()');
 assert.equal((await db.query("select count(*)::int as n from notification_jobs where kind='renewal'")).rows[0].n, 1, 'Reminder must deduplicate');

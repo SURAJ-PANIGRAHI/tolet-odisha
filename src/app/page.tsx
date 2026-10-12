@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase, Listing } from '@/lib/supabase';
 import { Navbar } from '@/components/Navbar';
@@ -188,7 +189,7 @@ export default function Home() {
         </div>
       </section>
 
-      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : 'Your listing has been submitted. It will appear after admin approval and expire after 30 days. If you provided an email, confirm it to receive renewal reminders.'}</p>}
+      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : (process.env.NEXT_PUBLIC_PHONE_OTP_ENABLED === 'true' ? 'Your listing is live and expires after 30 days. If you provided an email, confirm it for a reminder three days before expiry.' : 'Your listing has been submitted for review and expires after 30 days. If you provided an email, confirm it for a reminder three days before expiry.')}</p>}
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         
@@ -339,7 +340,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+          <div className="flex flex-wrap justify-center items-center gap-4 text-xs font-semibold text-slate-600">
+            <Link href="/disclaimer" className="hover:text-slate-900 underline">{isOdia ? 'ଦାୟିତ୍ୱ ଅସ୍ୱୀକାର' : 'Disclaimer'}</Link>
             <a
               href="https://wa.me/919437159484?text=Namaskar%20Suraj!%20I%20want%20to%20advertise%20my%20business%20on%20ToLetOdisha."
               target="_blank"

@@ -22,7 +22,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [reports, setReports] = useState<{ id: string; listing_id: string; reason: string; description: string | null; created_at: string }[]>([]);
   const [rows, setRows] = useState<ReviewListing[]>([]);
-  const [filter, setFilter] = useState('pending');
+  const [filter, setFilter] = useState(process.env.NEXT_PUBLIC_PHONE_OTP_ENABLED === 'true' ? 'approved' : 'pending');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -87,7 +87,7 @@ export default function AdminPage() {
 
   const button = 'rounded-lg bg-[#005B94] px-4 py-2 text-white disabled:opacity-50';
   return <main className="mx-auto max-w-4xl p-6 space-y-5">
-    <h1 className="text-2xl font-bold">ToLet Odisha — Listing review</h1>
+    <h1 className="text-2xl font-bold">ToLet Odisha — Report moderation</h1>
     <Link href="/" className="text-[#005B94] underline">Back to listings</Link>
     {message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message}</p>}
     {!ready ? <p>Loading…</p> : !session ? <form onSubmit={login} className="max-w-sm space-y-4">
@@ -98,12 +98,12 @@ export default function AdminPage() {
       <div className="flex flex-wrap gap-4 items-center">
         <button className={button} onClick={() => void admin.auth.signOut()}>Sign out</button>
         <label>Queue <select className="rounded border p-2" value={filter} onChange={event => setFilter(event.target.value)}>
-          <option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+          <option value="pending">Pending</option><option value="approved">Published</option><option value="rejected">Rejected</option>
         </select></label>
       </div>
       {busy && <p role="status">Working…</p>}
       {authorized && !busy && rows.length === 0 && <p>No listings in this queue.</p>}
-      {authorized && <p className="text-sm text-slate-600">Showing up to 100 oldest submissions. Process these to see the next batch.</p>}
+      {authorized && <p className="text-sm text-slate-600">Showing up to 100 listings in this category. Review reported listings below.</p>}
       {authorized && <section className="rounded-xl border border-amber-200 p-4 space-y-3">
         <h2 className="text-lg font-bold">Latest reports</h2>
         <p className="text-sm text-slate-600">Latest 100 reports. Match the listing ID below with a listing in the review queue.</p>
