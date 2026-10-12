@@ -1,0 +1,33 @@
+{
+  "packageId": "in.toletodisha.app.preview",
+  "host": "www.toletodisha.in",
+  "name": "ToLet Odisha Preview",
+  "launcherName": "ToLet Odisha",
+  "display": "standalone",
+  "themeColor": "#005B94",
+  "navigationColor": "#FFFFFF",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://www.toletodisha.in/icons/icon-512.png",
+  "maskableIconUrl": "https://www.toletodisha.in/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "preview.keystore",
+    "alias": "preview"
+  },
+  "appVersion": "0.1.0",
+  "appVersionCode": 1,
+  "generatorApp": "bubblewrap-cli 1.27.0",
+  "webManifestUrl": "https://www.toletodisha.in/manifest.json",
+  "fallbackType": "customtabs",
+  "enableSiteSettingsShortcut": true,
+  "shortcuts": [],
+  "fingerprints": [
+    {
+      "name": "Preview testing certificate",
+      "value": "A1:64:6A:F1:B5:0B:A6:3C:A0:4E:61:AB:62:D3:E3:0D:90:51:90:7D:20:DB:F0:EC:F8:BB:14:81:F5:FC:88:79"
+    }
+  ],
+  "minSdkVersion": 24
+}
