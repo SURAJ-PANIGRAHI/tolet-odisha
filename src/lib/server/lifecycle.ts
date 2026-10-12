@@ -72,7 +72,7 @@ export async function dispatchEmails(limit = 20, listingId: string | null = null
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json', 'Idempotency-Key': `tolet-${job.id}` },
-        body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [job.recipient], subject: job.subject, text: body }),
+        body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [job.recipient], ...(job.kind === 'report' ? { cc: ['support@toletodisha.in'] } : {}), subject: job.subject, text: body }),
         signal: AbortSignal.timeout(10000),
       });
       if (!response.ok) throw new Error(`Email provider status ${response.status}`);

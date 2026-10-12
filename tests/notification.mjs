@@ -14,6 +14,7 @@ let fail = false;
 const sandbox = { exports: {}, Buffer, URL, AbortSignal, Date, console, process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-key', RENEWAL_SIGNING_SECRET: 'x'.repeat(40), APP_URL: 'https://example.com', RESEND_API_KEY: 'test-email-key', EMAIL_FROM: 'test@example.com' } }, require: name => name === 'server-only' ? {} : name === '@supabase/supabase-js' ? { createClient: () => db } : require(name), fetch: async (_url, input) => {
   assert.equal(input.headers['Idempotency-Key'], 'tolet-test-job');
   assert.equal(JSON.parse(input.body).to[0], 'test@example.com');
+  assert.equal(JSON.parse(input.body).cc[0], 'support@toletodisha.in');
   return { ok: !fail, status: fail ? 500 : 200 };
 } };
 vm.runInNewContext(source, sandbox);
