@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES, POPULAR_AMENITIES } from '@/data/odisha';
+import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES, POPULAR_AMENITIES, COMMERCIAL_TYPES } from '@/data/odisha';
 import { X, Upload, Check, Loader2, Sparkles } from 'lucide-react';
 
 interface PostAdModalProps {
@@ -19,6 +19,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
   const [rent, setRent] = useState('');
+  const [commercialType, setCommercialType] = useState('');
+  const [areaSqft, setAreaSqft] = useState('');
+  const isCommercial = category === 'Commercial / Shop';
   const [deposit, setDeposit] = useState('');
   const [district, setDistrict] = useState(ODISHA_DISTRICTS.find(d => d.startsWith('Balasore')) || ODISHA_DISTRICTS[0]);
   const [locality, setLocality] = useState('');
@@ -73,6 +76,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       return;
     }
 
+    if ((isCommercial && (!commercialType || !areaSqft)) || (areaSqft && (!Number.isInteger(Number(areaSqft)) || Number(areaSqft) <= 0 || Number(areaSqft) > 10000000))) {
+      setErrorMsg('For commercial listings, choose a type and enter the area in square feet. Area must be a positive whole number, up to 10,000,000.');
+      return;
+    }
     const phone = contactPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
     if (!/^[6-9]\d{9}$/.test(phone) || !Number.isInteger(Number(rent)) || Number(rent) < 0 || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0) {
       setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
@@ -116,6 +123,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           title,
           description: description || null,
           category,
+          commercial_type: isCommercial ? commercialType : null,
+          area_sqft: areaSqft ? Number(areaSqft) : null,
           rent_monthly: parseInt(rent, 10),
           deposit: deposit ? parseInt(deposit, 10) : 0,
           district: district.split(' ')[0],
@@ -202,7 +211,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => { setCategory(e.target.value); setCommercialType(''); setAreaSqft(''); }}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
             >
               {CATEGORIES.filter(c => c.id !== 'All').map((cat) => (
@@ -212,6 +221,19 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               ))}
             </select>
           </div>
+
+          {isCommercial && <label className="block text-xs font-bold text-slate-700">
+            Commercial type *
+            <select required value={commercialType} onChange={event => setCommercialType(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              <option value="">Select commercial type</option>
+              {COMMERCIAL_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </label>}
+          {category !== 'Tutor / Tuition' && <label className="block text-xs font-bold text-slate-700">
+            {isCommercial ? 'Floor area (sq ft) *' : 'Floor area (sq ft) — optional'}
+            <input type="number" min="1" max="10000000" step="1" required={isCommercial} value={areaSqft} onChange={event => setAreaSqft(event.target.value)} placeholder={isCommercial ? 'e.g. 2100' : 'Leave blank if not known'} className="mt-1 w-full rounded-xl border border-slate-200 p-3 text-sm" />
+            {isCommercial && <span className="mt-1 block font-normal text-slate-500">Enter the total space available, in square feet. Describe floor, access and suitable uses below.</span>}
+          </label>}
 
           {/* Rent & Deposit */}
           <div className="grid grid-cols-2 gap-3">

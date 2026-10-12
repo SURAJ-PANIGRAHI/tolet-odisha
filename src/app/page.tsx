@@ -8,7 +8,7 @@ import { ListingCard } from '@/components/ListingCard';
 import { ListingDetailModal } from '@/components/ListingDetailModal';
 import { PostAdModal } from '@/components/PostAdModal';
 import { SponsorBanner } from '@/components/SponsorBanner';
-import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES } from '@/data/odisha';
+import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES, COMMERCIAL_TYPES } from '@/data/odisha';
 import { Search, MapPin, PlusCircle, Sparkles, AlertCircle, RefreshCw, Navigation } from 'lucide-react';
 
 export default function Home() {
@@ -30,7 +30,13 @@ export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState('Balasore');
   const [selectedLocality, setSelectedLocality] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [maxRent, setMaxRent] = useState<number>(10000);
+  const [maxRent, setMaxRent] = useState<number>(60000);
+  const [commercialType, setCommercialType] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
+  function selectCategory(value: string) {
+    setSelectedCategory(value);
+    setCommercialType('All');
+  }
 
   // Fetch public listings once, ignoring results after unmount.
   useEffect(() => {
@@ -79,6 +85,8 @@ export default function Home() {
         return false;
       }
 
+      if (selectedCategory === 'Commercial / Shop' && commercialType !== 'All' && item.commercial_type !== commercialType) return false;
+
       // Max Rent filter
       if (item.rent_monthly > maxRent) {
         return false;
@@ -87,7 +95,7 @@ export default function Home() {
       // Search query
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase();
-        const matchesTitle = item.title.toLowerCase().includes(q);
+        const matchesTitle = `${item.title} ${item.category} ${item.commercial_type || ''}`.toLowerCase().includes(q);
         const matchesLocality = item.locality.toLowerCase().includes(q);
         const matchesLandmark = item.landmark?.toLowerCase().includes(q) || false;
         const matchesDistrict = item.district.toLowerCase().includes(q);
@@ -97,8 +105,14 @@ export default function Home() {
       }
 
       return true;
+    }).sort((a, b) => {
+      const dateDifference = Date.parse(a.created_at) - Date.parse(b.created_at);
+      if (sortBy === 'oldest') return dateDifference || a.id.localeCompare(b.id);
+      if (sortBy === 'price-low') return a.rent_monthly - b.rent_monthly || -dateDifference || a.id.localeCompare(b.id);
+      if (sortBy === 'price-high') return b.rent_monthly - a.rent_monthly || -dateDifference || a.id.localeCompare(b.id);
+      return -dateDifference || a.id.localeCompare(b.id);
     });
-  }, [listings, selectedDistrict, selectedLocality, selectedCategory, maxRent, searchQuery, clock]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, maxRent, searchQuery, clock]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 sm:pb-12">
@@ -200,7 +214,7 @@ export default function Home() {
             return (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => selectCategory(cat.id)}
                 className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer shrink-0 ${
                   isSelected
                     ? 'bg-[#005B94] text-white shadow-xs'
@@ -211,6 +225,31 @@ export default function Home() {
               </button>
             );
           })}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+          <label className="text-xs font-bold text-slate-700">
+            {isOdia ? 'ସମ୍ପତ୍ତି ପ୍ରକାର (Property type)' : 'Property type'}
+            <select value={selectedCategory} onChange={event => selectCategory(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              {CATEGORIES.map(category => <option key={category.id} value={category.id}>{isOdia ? category.labelOdia : category.label}</option>)}
+            </select>
+          </label>
+          {selectedCategory === 'Commercial / Shop' && <label className="text-xs font-bold text-slate-700">
+            {isOdia ? 'ବ୍ୟବସାୟିକ ପ୍ରକାର (Commercial type)' : 'Commercial type'}
+            <select value={commercialType} onChange={event => setCommercialType(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              <option value="All">All commercial types</option>
+              {COMMERCIAL_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </label>}
+          <label className="text-xs font-bold text-slate-700 sm:col-start-3">
+            {isOdia ? 'ସଜାନ୍ତୁ (Sort by)' : 'Sort by'}
+            <select value={sortBy} onChange={event => setSortBy(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+            </select>
+          </label>
         </div>
 
         {/* Results Header & Max Rent Slider */}
@@ -233,7 +272,8 @@ export default function Home() {
             <input
               type="range"
               min="1000"
-              max="20000"
+              max="60000"
+              aria-label="Maximum monthly rent"
               step="500"
               value={maxRent}
               onChange={(e) => setMaxRent(Number(e.target.value))}

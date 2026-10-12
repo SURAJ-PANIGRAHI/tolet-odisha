@@ -66,7 +66,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
               
               {/* Category Badge */}
               <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full font-medium z-10">
-                {listing.category}
+                {listing.commercial_type || listing.category}
               </div>
 
               {/* Photo Counter */}
@@ -115,7 +115,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
         ) : (
           <div className="p-6 bg-gradient-to-r from-[#005B94] to-[#0077C8] text-white rounded-t-3xl">
             <span className="bg-white/20 backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full">
-              {listing.category}
+              {listing.commercial_type || listing.category}
             </span>
             <h2 className="text-xl font-bold mt-3">{listing.title}</h2>
           </div>
@@ -170,6 +170,8 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
           )}
 
           {/* Amenities */}
+          {listing.area_sqft != null && <p className="mt-2 text-sm font-semibold text-slate-700">{listing.area_sqft.toLocaleString('en-IN')} sq ft</p>}
+
           {listing.amenities && listing.amenities.length > 0 && (
             <div className="mb-6">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">

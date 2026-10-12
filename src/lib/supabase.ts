@@ -12,6 +12,8 @@ export interface Listing {
   title: string;
   description: string | null;
   category: string;
+  commercial_type?: string | null;
+  area_sqft?: number | null;
   rent_monthly: number;
   deposit: number;
   district: string;

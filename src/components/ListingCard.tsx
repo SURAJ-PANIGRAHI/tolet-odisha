@@ -49,7 +49,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, isOdia, onSel
             />
             <div className="absolute top-3 left-3">
               <span className={`px-2.5 py-1 text-xs font-bold rounded-full border shadow-2xs backdrop-blur-md ${getCategoryColor(listing.category)}`}>
-                {listing.category}
+                {listing.commercial_type || listing.category}
               </span>
             </div>
           </div>
@@ -57,7 +57,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, isOdia, onSel
           <div className="p-4 pb-1">
             <div className="flex items-center justify-between mb-2">
               <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${getCategoryColor(listing.category)}`}>
-                {listing.category}
+                {listing.commercial_type || listing.category}
               </span>
               <span className="text-[11px] text-slate-400 font-medium">
                 {new Date(listing.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
@@ -87,6 +87,8 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, isOdia, onSel
           </h3>
 
           <EmailVerifiedBadge verified={listing.email_verified} isOdia={isOdia} />
+
+          {listing.area_sqft != null && <p className="mt-2 text-sm font-semibold text-slate-700">{listing.area_sqft.toLocaleString('en-IN')} sq ft</p>}
 
           {/* Location */}
           <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-2">
