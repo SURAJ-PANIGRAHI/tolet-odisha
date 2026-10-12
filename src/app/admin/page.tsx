@@ -22,7 +22,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [reports, setReports] = useState<{ id: string; listing_id: string; reason: string; description: string | null; created_at: string }[]>([]);
   const [rows, setRows] = useState<ReviewListing[]>([]);
-  const [filter, setFilter] = useState(process.env.NEXT_PUBLIC_PHONE_OTP_ENABLED === 'true' ? 'approved' : 'pending');
+  const [filter, setFilter] = useState('approved');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
 

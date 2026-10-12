@@ -1,4 +1,5 @@
 'use client';
+import { EmailVerifiedBadge } from './EmailVerifiedBadge';
 
 import React, { useState } from 'react';
 import { ReportModal } from '@/components/ReportModal';
@@ -193,6 +194,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
               </div>
               <div>
                 <div className="font-bold text-slate-900 text-sm">{listing.contact_name}</div>
+                <EmailVerifiedBadge verified={listing.email_verified} isOdia={isOdia} />
                 <div className="text-xs text-slate-500">{isOdia ? 'ଘର ମାଲିକ / ପରିଚାଳକ' : 'Owner / Manager'}</div>
               </div>
             </div>

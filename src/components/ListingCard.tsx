@@ -1,4 +1,5 @@
 'use client';
+import { EmailVerifiedBadge } from './EmailVerifiedBadge';
 
 import React from 'react';
 import { Listing } from '@/lib/supabase';
@@ -84,6 +85,8 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, isOdia, onSel
           <h3 className="font-bold text-slate-900 text-sm sm:text-base line-clamp-1 group-hover:text-[#005B94] transition">
             {listing.title}
           </h3>
+
+          <EmailVerifiedBadge verified={listing.email_verified} isOdia={isOdia} />
 
           {/* Location */}
           <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-2">

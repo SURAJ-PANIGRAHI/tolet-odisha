@@ -189,7 +189,7 @@ export default function Home() {
         </div>
       </section>
 
-      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ଅନୁମୋଦନ ପାଇଁ ପଠାଯାଇଛି।' : (process.env.NEXT_PUBLIC_PHONE_OTP_ENABLED === 'true' ? 'Your listing is live and expires after 30 days. If you provided an email, confirm it for a reminder three days before expiry.' : 'Your listing has been submitted for review and expires after 30 days. If you provided an email, confirm it for a reminder three days before expiry.')}</p>}
+      {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ପ୍ରକାଶିତ ହୋଇଛି।' : 'Your listing is live and expires after 30 days. If you provided an email, confirm it for an Email verified badge and a reminder three days before expiry.'}</p>}
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         
@@ -320,7 +320,13 @@ export default function Home() {
       <PostAdModal
         isOpen={isPostModalOpen}
         onClose={() => setIsPostModalOpen(false)}
-        onSuccess={() => setSubmissionNotice(true)}
+        onSuccess={() => {
+          setSubmissionNotice(true);
+          void supabase.from('listings').select('*').eq('is_active', true).order('created_at', { ascending: false }).then(({ data, error }) => {
+            if (error) setFetchError(true);
+            else { setListings(data || []); setFetchError(false); }
+          });
+        }}
         isOdia={isOdia}
       />
       {/* Footer */}

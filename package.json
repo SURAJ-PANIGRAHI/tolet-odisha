@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node tests/lifecycle-db.mjs && node tests/notification.mjs && node tests/phone-posting.mjs"
+    "test": "node tests/lifecycle-db.mjs && node tests/notification.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

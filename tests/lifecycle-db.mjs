@@ -21,6 +21,7 @@ await db.exec(readFileSync(new URL('../supabase/rollout/optional_owner_email.sql
 await db.exec(readFileSync(new URL('../supabase/rollout/owner_removal.sql', import.meta.url), 'utf8'));
 await db.exec(readFileSync(new URL('../supabase/rollout/three_day_reminders.sql', import.meta.url), 'utf8'));
 await db.exec(readFileSync(new URL('../supabase/rollout/phone_verified_posting.sql', import.meta.url), 'utf8'));
+await db.exec(readFileSync(new URL('../supabase/rollout/email_verified_publishing.sql', import.meta.url), 'utf8'));
 const verifiedUser = (await db.query('insert into auth.users(id) values(gen_random_uuid()) returning id')).rows[0].id;
 const row = { title: 'Test property', category: 'Boys Mess', rent_monthly: 1000, deposit: 0, district: 'Balasore', locality: 'Test locality', contact_name: 'Test owner', contact_phone: '9876543210', whatsapp_number: '9876543210', amenities: [], images: [] };
 await db.exec('set role service_role');
@@ -43,8 +44,15 @@ assert.equal((await db.query('select count(*)::int as n from listings where id=$
 await assert.rejects(db.query('select public.submit_phone_verified_listing($1::jsonb,$2,$3,$4,$5)',[JSON.stringify(row),null,'c'.repeat(64),verifiedUser,'+919876543210']));
 await db.exec('reset role;set role service_role');
 await db.query('delete from listings where id=$1',[phoneVerifiedId]);
+const instantId = (await db.query('select public.submit_managed_listing($1::jsonb,$2,$3) as id',[JSON.stringify({...row,email_verified:true}),null,'d'.repeat(64)])).rows[0].id;
+const instant = (await db.query('select * from listings where id=$1',[instantId])).rows[0];
+assert.equal(instant.is_active,true);assert.equal(instant.email_verified,false,'Client cannot forge email verification');
+assert.equal((await db.query('select count(*)::int as n from notification_jobs where listing_id=$1',[instantId])).rows[0].n,0);
+await db.query('delete from listings where id=$1',[instantId]);
 const ownerHash = 'a'.repeat(64);
 const managedId = (await db.query('select public.submit_managed_listing($1::jsonb,$2,$3) as id', [JSON.stringify(row), 'test@example.com', ownerHash])).rows[0].id;
+assert.equal((await db.query('select email_verified from listings where id=$1',[managedId])).rows[0].email_verified,false);
+assert.equal((await db.query('select is_active from listings where id=$1',[managedId])).rows[0].is_active,true);
 const managedCycle = (await db.query('select expires_at from listings where id=$1',[managedId])).rows[0].expires_at.toISOString();
 assert.equal((await db.query('select remove_owned_listing($1,$2) as ok',[managedId,'b'.repeat(64)])).rows[0].ok,false);
 assert.equal((await db.query('select remove_owned_listing($1,$2) as ok',["00000000-0000-0000-0000-000000000000",ownerHash])).rows[0].ok,false);
@@ -87,6 +95,8 @@ const jobs = (await db.query('select * from public.claim_notification_jobs(20,nu
 assert.equal(jobs.length, 2);
 assert.equal((await db.query('select * from public.claim_notification_jobs(20,null)')).rows.length, 0, 'Lease must prevent concurrent claims');
 assert.equal((await db.query('select public.confirm_listing_owner($1,$2,false) as ok', [id, cycle])).rows[0].ok, true);
+assert.equal((await db.query('select email_verified from listings where id=$1',[id])).rows[0].email_verified,true);
+
 assert.equal((await db.query('select public.confirm_listing_owner($1,$2,true) as ok', [id, cycle])).rows[0].ok, false, 'Cannot renew too early');
 await db.exec('reset role');
 const nearExpiry = new Date(Date.now() + 2.5 * 86400000).toISOString();

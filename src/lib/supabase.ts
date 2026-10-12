@@ -24,4 +24,5 @@ export interface Listing {
   amenities: string[];
   is_featured: boolean;
   is_active: boolean;
+  email_verified?: boolean;
 }
