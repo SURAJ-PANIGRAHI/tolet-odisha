@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.toletodisha.app.preview",
+      "sha256_cert_fingerprints": [
+        "A1:64:6A:F1:B5:0B:A6:3C:A0:4E:61:AB:62:D3:E3:0D:90:51:90:7D:20:DB:F0:EC:F8:BB:14:81:F5:FC:88:79"
+      ]
+    }
+  }
+]
