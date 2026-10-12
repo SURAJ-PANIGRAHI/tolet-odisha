@@ -18,6 +18,7 @@ id uuid primary key default gen_random_uuid(), created_at timestamptz default no
 `);
 for (const file of ['20261011_moderation.sql', '20261012_reports.sql', '20261012_automated_lifecycle.sql']) await db.exec(readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), 'utf8'));
 await db.exec(readFileSync(new URL('../supabase/rollout/optional_owner_email.sql', import.meta.url), 'utf8'));
+await db.exec(readFileSync(new URL('../supabase/rollout/owner_removal.sql', import.meta.url), 'utf8'));
 const row = { title: 'Test property', category: 'Boys Mess', rent_monthly: 1000, deposit: 0, district: 'Balasore', locality: 'Test locality', contact_name: 'Test owner', contact_phone: '9876543210', whatsapp_number: '9876543210', amenities: [], images: [] };
 await db.exec('set role service_role');
 for (const email of [null, '', '   ']) {
@@ -29,6 +30,21 @@ for (const email of [null, '', '   ']) {
   assert.equal((await db.query('select count(*)::int as n from notification_jobs where listing_id=$1', [noEmailId])).rows[0].n, 0);
   await db.query('delete from listings where id=$1', [noEmailId]);
 }
+const ownerHash = 'a'.repeat(64);
+const managedId = (await db.query('select public.submit_managed_listing($1::jsonb,$2,$3) as id', [JSON.stringify(row), 'test@example.com', ownerHash])).rows[0].id;
+const managedCycle = (await db.query('select expires_at from listings where id=$1',[managedId])).rows[0].expires_at.toISOString();
+assert.equal((await db.query('select remove_owned_listing($1,$2) as ok',[managedId,'b'.repeat(64)])).rows[0].ok,false);
+assert.equal((await db.query('select remove_owned_listing($1,$2) as ok',["00000000-0000-0000-0000-000000000000",ownerHash])).rows[0].ok,false);
+await db.query("update listings set moderation_status='approved',is_active=true where id=$1",[managedId]);
+assert.equal((await db.query('select remove_owned_listing($1,$2) as ok',[managedId,ownerHash])).rows[0].ok,true);
+assert.equal((await db.query('select remove_owned_listing($1,$2) as ok',[managedId,ownerHash])).rows[0].ok,true);
+assert.equal((await db.query('select confirm_listing_owner($1,$2,true) as ok',[managedId,managedCycle])).rows[0].ok,false);
+assert.equal((await db.query('select is_active from listings where id=$1',[managedId])).rows[0].is_active,false);
+await db.exec('set role anon');
+await assert.rejects(db.query('select * from listing_management_keys'));
+await assert.rejects(db.query('select remove_owned_listing($1,$2)',[managedId,ownerHash]));
+await db.exec('reset role; set role service_role');
+await db.query('delete from listings where id=$1',[managedId]);
 const id = (await db.query('select public.submit_listing_with_owner($1::jsonb, $2) as id', [JSON.stringify(row), 'test@example.com'])).rows[0].id;
 await db.exec('reset role');
 let listing = (await db.query('select * from listings where id=$1', [id])).rows[0];

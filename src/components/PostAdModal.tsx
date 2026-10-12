@@ -14,6 +14,7 @@ interface PostAdModalProps {
 
 export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuccess, isOdia }) => {
   const [loading, setLoading] = useState(false);
+  const [managementPath, setManagementPath] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
@@ -30,6 +31,19 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
+  if (managementPath) return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+      <div role="dialog" aria-modal="true" aria-labelledby="submitted-heading" className="max-w-lg w-full rounded-3xl bg-white p-6 space-y-4">
+        <h2 id="submitted-heading" className="text-xl font-bold">{isOdia ? 'ବିଜ୍ଞାପନ ପଠାଯାଇଛି' : 'Listing submitted'}</h2>
+        <p>{isOdia ? 'ନିଜ ବିଜ୍ଞାପନ ହଟାଇବା ପାଇଁ ଏହି ଗୋପନୀୟ ଲିଙ୍କ୍ ସଞ୍ଚୟ କରନ୍ତୁ। ଏହା ଅନ୍ୟ କାହାକୁ ଦିଅନ୍ତୁ ନାହିଁ।' : 'Save this private link to remove your listing whenever you want. Anyone with this link can remove your ad, so keep it private.'}</p>
+        <label htmlFor="management-link" className="block font-semibold">{isOdia ? 'ଗୋପନୀୟ ଲିଙ୍କ୍' : 'Your private management link'}</label>
+        <input id="management-link" readOnly value={`${window.location.origin}${managementPath}`} onFocus={event => event.currentTarget.select()} className="w-full rounded border p-3 text-sm" />
+        <a href={managementPath} className="block text-[#005B94] underline">{isOdia ? 'ବିଜ୍ଞାପନ ପରିଚାଳନା କରନ୍ତୁ' : 'Open management page'}</a>
+        <p className="text-sm text-slate-600">{isOdia ? '୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : 'Your listing requires admin approval and expires after 30 days. Email is optional; renewal reminders require a verified email.'}</p>
+        <button type="button" onClick={() => { setManagementPath(''); onClose(); }} className="rounded bg-[#005B94] px-5 py-3 text-white">{isOdia ? 'ସମାପ୍ତ' : 'Done — I have saved the link'}</button>
+      </div>
+    </div>
+  );
 
   const currentLocalities = DISTRICT_LOCALITIES[district.split(' ')[0]] || [];
 
@@ -122,8 +136,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
         throw new Error(result.error || 'Unable to submit listing');
       }
 
+      const result = await response.json();
+      setManagementPath(result.management_path);
       onSuccess();
-      onClose();
     } catch (err: unknown) {
       const error = err as { message?: string };
       setErrorMsg(error.message || 'Error creating listing');
@@ -337,7 +352,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="owner-email">{isOdia ? 'ଆପଣଙ୍କ ଇମେଲ୍ (ଇଚ୍ଛାଧୀନ)' : 'Your email (optional)'}</label>
             <input id="owner-email" type="email" maxLength={254} value={contactEmail} onChange={event => setContactEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm" />
-            <p className="mt-1 text-xs text-slate-500">{isOdia ? '୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ। ନବୀକରଣ ଇମେଲ୍ ପାଇବା ପାଇଁ ଇମେଲ୍ ଦିଅନ୍ତୁ ଓ ନିଶ୍ଚିତ କରନ୍ତୁ। ଇମେଲ୍ ଗୋପନୀୟ ରହିବ।' : 'Listings expire after 30 days. Add and confirm an email to receive renewal reminders. Your email stays private. Without an email, you can post again after expiry.'}</p>
+            <p className="mt-1 text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ଦେବା ବାଧ୍ୟତାମୂଳକ ନୁହେଁ। କେବଳ ନିଶ୍ଚିତ ଇମେଲ୍‌କୁ ନବୀକରଣ ସୂଚନା ମିଳିବ। ୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : 'Email is not required. Renewal reminders are sent only if you provide and verify an email. Without renewal, your ad is removed after 30 days.'}</p>
           </div>
           {/* Amenities Selector */}
           <div>
