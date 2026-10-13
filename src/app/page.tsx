@@ -30,7 +30,16 @@ export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState('Balasore');
   const [selectedLocality, setSelectedLocality] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [maxRent, setMaxRent] = useState<number>(300000);
+  // Null keeps the initial budget at the full available range as ads load.
+  const [maxRent, setMaxRent] = useState<number | null>(null);
+  const sliderMax = useMemo(() => {
+    const highestRent = listings.reduce((highest, listing) => {
+      if (listing.expires_at && Date.parse(listing.expires_at) <= clock) return highest;
+      return Number.isFinite(listing.rent_monthly) ? Math.max(highest, listing.rent_monthly) : highest;
+    }, 500000);
+    return Math.ceil(highestRent / 500) * 500;
+  }, [listings, clock]);
+  const budgetLimit = Math.min(maxRent ?? sliderMax, sliderMax);
   const [commercialType, setCommercialType] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
   function selectCategory(value: string) {
@@ -88,7 +97,7 @@ export default function Home() {
       if (selectedCategory === 'Commercial / Shop' && commercialType !== 'All' && item.commercial_type !== commercialType) return false;
 
       // Max Rent filter
-      if (item.rent_monthly > maxRent) {
+      if (item.rent_monthly > budgetLimit) {
         return false;
       }
 
@@ -112,7 +121,7 @@ export default function Home() {
       if (sortBy === 'price-high') return b.rent_monthly - a.rent_monthly || -dateDifference || a.id.localeCompare(b.id);
       return -dateDifference || a.id.localeCompare(b.id);
     });
-  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, maxRent, searchQuery, clock]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, budgetLimit, searchQuery, clock]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 sm:pb-12">
@@ -268,14 +277,14 @@ export default function Home() {
             <span className="text-slate-500 font-medium">
               {isOdia ? 'ସର୍ବାଧିକ ଭଡ଼ା:' : 'Max Rent:'}
             </span>
-            <span className="font-black text-[#005B94]">₹{maxRent.toLocaleString('en-IN')}</span>
+            <span className="font-black text-[#005B94]">₹{budgetLimit.toLocaleString('en-IN')}</span>
             <input
               type="range"
               min="1000"
-              max="300000"
+              max={sliderMax}
               aria-label="Maximum monthly rent"
               step="500"
-              value={maxRent}
+              value={budgetLimit}
               onChange={(e) => setMaxRent(Number(e.target.value))}
               className="accent-[#005B94] w-24 sm:w-32 cursor-pointer"
             />
