@@ -30,7 +30,7 @@ export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState('Balasore');
   const [selectedLocality, setSelectedLocality] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [maxRent, setMaxRent] = useState<number>(60000);
+  const [maxRent, setMaxRent] = useState<number>(300000);
   const [commercialType, setCommercialType] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
   function selectCategory(value: string) {
@@ -126,14 +126,14 @@ export default function Home() {
       {/* Hero Section - KLM Royal Blue */}
       <section className="bg-gradient-to-b from-[#E6F4FA] via-[#F0F8FC] to-transparent pt-8 pb-6 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
-          
+
           {/* Trust Tagline */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-[#005B94] border border-[#005B94]/20 text-xs font-bold shadow-2xs mb-3.5">
             <Sparkles className="w-4 h-4 text-[#00A1DE]" />
             <span>
-              {isOdia 
-                ? '✨ ୧୦୦% ସିଧାସଳଖ ଘର ମାଲିକ • ଶୂନ ଦଲାଲି ଓ ହିଡେନ୍ ଚାର୍ଜ' 
-                : '✨ 100% Direct Owners • Zero Brokerage & No Middlemen'}
+              {isOdia
+                ? '✨ ମାଲିକ, ବ୍ରୋକର ଓ ସ୍ଥାନୀୟ ବିଜ୍ଞାପନ'
+                : '✨ Owners, Brokers & Local Listings'}
             </span>
           </div>
 
@@ -143,12 +143,12 @@ export default function Home() {
           <p className="text-slate-600 text-xs sm:text-sm mt-2.5 max-w-xl mx-auto font-medium">
             {isOdia
               ? 'ବାଲେଶ୍ୱର ଓ ଓଡ଼ିଶାର ଛାତ୍ର, ଚାକିରିଆ ଓ ପରିବାର ପାଇଁ ମାଗଣା ପୋର୍ଟାଲ୍। ସିଧା ମାଲିକଙ୍କ ସହ WhatsApp କରନ୍ତୁ।'
-              : 'Direct owner contact for students, bachelors & families across Odisha. Instant WhatsApp chat.'}
+              : 'Contact property advertisers across Odisha. Check the Listed by label before enquiring.'}
           </p>
 
           {/* Clean 2-Dropdown + Search Bar */}
           <div className="mt-6 bg-white p-3.5 sm:p-4 rounded-2xl shadow-sm border border-slate-200/80 max-w-3xl mx-auto flex flex-col sm:flex-row gap-2.5">
-            
+
             {/* 1. District Dropdown */}
             <div className="relative sm:w-56">
               <MapPin className="w-4 h-4 text-[#005B94] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -206,7 +206,7 @@ export default function Home() {
       {submissionNotice && <p role="status" className="mx-auto max-w-3xl rounded-xl bg-green-50 p-4 text-green-800">{isOdia ? 'ଆପଣଙ୍କ ବିଜ୍ଞାପନ ପ୍ରକାଶିତ ହୋଇଛି।' : 'Your listing is live and expires after 30 days. If you provided an email, confirm it for an Email verified badge and a reminder three days before expiry.'}</p>}
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        
+
         {/* Category Pills Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {CATEGORIES.map((cat) => {
@@ -272,7 +272,7 @@ export default function Home() {
             <input
               type="range"
               min="1000"
-              max="60000"
+              max="300000"
               aria-label="Maximum monthly rent"
               step="500"
               value={maxRent}
@@ -380,8 +380,8 @@ export default function Home() {
               <span className="text-xs text-slate-400">• Built for Odisha</span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              {isOdia 
-                ? 'ଓଡ଼ିଶାର ସମସ୍ତ ଛାତ୍ର, ଚାକିରିଆ ଓ ପରିବାର ପାଇଁ ଘର ଭଡ଼ା ଖୋଜିବାର ବିଶ୍ୱସ୍ତ ମଞ୍ଚ।' 
+              {isOdia
+                ? 'ଓଡ଼ିଶାର ସମସ୍ତ ଛାତ୍ର, ଚାକିରିଆ ଓ ପରିବାର ପାଇଁ ଘର ଭଡ଼ା ଖୋଜିବାର ବିଶ୍ୱସ୍ତ ମଞ୍ଚ।'
                 : 'Direct student rooms, mess, hostels and flats without brokers across Odisha.'}
             </p>
           </div>

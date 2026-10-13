@@ -87,6 +87,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, isOdia, onSel
           </h3>
 
           <EmailVerifiedBadge verified={listing.email_verified} isOdia={isOdia} />
+          {listing.advertiser_type && <p className="mt-1 text-xs text-slate-600">Listed by: {listing.advertiser_type} <span className="text-slate-400">(self-declared)</span></p>}
 
           {listing.area_sqft != null && <p className="mt-2 text-sm font-semibold text-slate-700">{listing.area_sqft.toLocaleString('en-IN')} sq ft</p>}
 

@@ -197,6 +197,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
               <div>
                 <div className="font-bold text-slate-900 text-sm">{listing.contact_name}</div>
                 <EmailVerifiedBadge verified={listing.email_verified} isOdia={isOdia} />
+          {listing.advertiser_type && <p className="mt-1 text-xs text-slate-600">Listed by: {listing.advertiser_type} <span className="text-slate-400">(self-declared)</span></p>}
                 <div className="text-xs text-slate-500">{isOdia ? 'ଘର ମାଲିକ / ପରିଚାଳକ' : 'Owner / Manager'}</div>
               </div>
             </div>

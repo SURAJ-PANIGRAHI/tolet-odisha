@@ -27,17 +27,24 @@ await db.exec('alter table listings add constraint listings_category_check check
 const { readdirSync } = await import('node:fs');
 const migration = readdirSync(new URL('../supabase/migrations/', import.meta.url)).find(name => name.endsWith('_property_types_and_area.sql'));
 await db.exec(readFileSync(new URL('../supabase/migrations/' + migration, import.meta.url), 'utf8'));
-const base={title:'Area test',category:'Commercial / Shop',rent_monthly:25000,deposit:0,district:'Balasore',locality:'Test',contact_name:'Test',contact_phone:'9876543210',images:[],amenities:[]};
+const optionalMigration = readdirSync(new URL('../supabase/migrations/', import.meta.url)).find(name => name.endsWith('_optional_property_area.sql'));
+await db.exec(readFileSync(new URL('../supabase/migrations/' + optionalMigration, import.meta.url), 'utf8'));
+const base={title:'Area test',advertiser_type:'Owner',category:'Commercial / Shop',rent_monthly:25000,deposit:0,district:'Balasore',locality:'Test',contact_name:'Test',contact_phone:'9876543210',images:[],amenities:[]};
 await db.exec('set role service_role');
 for (const type of ['Office Space','Bank / ATM Space','Warehouse / Godown']) {
  const id=(await db.query('select submit_managed_listing($1::jsonb,null,$2) id',[JSON.stringify({...base,commercial_type:type,area_sqft:2100}),'a'.repeat(64)])).rows[0].id;
  const row=(await db.query('select * from listings where id=$1',[id])).rows[0];assert.equal(row.commercial_type,type);assert.equal(row.area_sqft,2100);assert.equal(row.is_active,true);assert.equal(row.email_verified,false);
 }
+const noAreaId=(await db.query('select submit_managed_listing($1::jsonb,null,$2) id',[JSON.stringify({...base,commercial_type:'Office Space'}),'e'.repeat(64)])).rows[0].id;
+assert.equal((await db.query('select area_sqft from listings where id=$1',[noAreaId])).rows[0].area_sqft,null);
+assert.equal((await db.query('select advertiser_type from listings where id=$1',[noAreaId])).rows[0].advertiser_type,'Owner');
+assert.equal((await db.query("select total_count from count_listings_by_phone('+91 9876543210')")).rows[0].total_count,4);
 for (const category of ['Ladies Mess','Paying Guest (PG)','Girls Hostel','Commercial / Shop']) {
  await db.query('select submit_managed_listing($1::jsonb,null,$2)',[JSON.stringify({...base,category}),'b'.repeat(64)]);
 }
-for (const bad of [{area_sqft:-1},{area_sqft:0},{commercial_type:'Invalid',area_sqft:100},{category:'Ladies Mess',commercial_type:'Office Space',area_sqft:100}]) await assert.rejects(db.query('select submit_managed_listing($1::jsonb,null,$2)',[JSON.stringify({...base,...bad}),'c'.repeat(64)]));
+for (const bad of [{advertiser_type:'Invalid'},{area_sqft:-1},{area_sqft:0},{commercial_type:'Invalid',area_sqft:100},{category:'Ladies Mess',commercial_type:'Office Space',area_sqft:100}]) await assert.rejects(db.query('select submit_managed_listing($1::jsonb,null,$2)',[JSON.stringify({...base,...bad}),'c'.repeat(64)]));
 await db.exec('set role anon');
-assert.equal((await db.query('select area_sqft from listings where commercial_type is not null')).rows.length,3);
+assert.equal((await db.query('select area_sqft from listings where commercial_type is not null')).rows.length,4);
+await assert.rejects(db.query("select * from count_listings_by_phone('9876543210')"));
 await assert.rejects(db.query('select submit_managed_listing($1::jsonb,null,$2)',[JSON.stringify(base),'d'.repeat(64)]));
 await db.close();console.log('PASS: property type/area persistence, legacy ads, PG/Ladies Mess, invalid data and public permissions');
