@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
               </span>
             </div>
             <p className="text-[11px] font-medium text-slate-500 -mt-0.5">
-              {isOdia ? 'ଆମ ପକ୍ଷରୁ କୌଣସି କମିଶନ୍ ନାହିଁ' : 'No commission charged by ToLet Odisha'}
+              {isOdia ? 'କୌଣସି କମିଶନ୍ ଦିଅନ୍ତୁ ନାହିଁ' : 'Pay Zero Commission'}
             </p>
           </div>
         </div>

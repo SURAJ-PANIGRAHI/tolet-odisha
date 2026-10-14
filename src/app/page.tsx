@@ -152,8 +152,8 @@ export default function Home() {
             <Sparkles className="w-4 h-4 text-[#00A1DE]" />
             <span>
               {isOdia
-                ? '✨ ToLet Odisha କୌଣସି କମିଶନ୍ ନିଏ ନାହିଁ'
-                : '✨ No commission charged by ToLet Odisha'}
+                ? '✨ କୌଣସି କମିଶନ୍ ଦିଅନ୍ତୁ ନାହିଁ'
+                : '✨ Pay Zero Commission'}
             </span>
           </div>
 

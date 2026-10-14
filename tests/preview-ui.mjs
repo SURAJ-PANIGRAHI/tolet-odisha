@@ -9,5 +9,5 @@ assert(!picker('A district with no presets','').includes('<input'));assert(picke
 const {PostAdModal}=load('src/components/PostAdModal.tsx',{'@/lib/supabase':{supabase:{}},'@/lib/client/portal':{portalEnabled:false,postingSession:()=>{}},'@/data/odisha':data,'./LocalityPicker':{LocalityPicker},'next/link':{default:props=>React.createElement('a',props,props.children)}});
 const form=renderToStaticMarkup(React.createElement(PostAdModal,{isOpen:true,onClose:()=>{},onSuccess:()=>{},isOdia:false}));
 assert(form.includes('<option value="Ladies Mess">'));assert(form.includes('<option value="Paying Guest (PG)">'));assert(!form.includes('aria-label="Other locality / area"'));assert(form.includes('Mallikashpur'));
-const nav=readFileSync(new URL('../src/components/Navbar.tsx',import.meta.url),'utf8');assert(nav.includes('No commission charged by ToLet Odisha'));assert(!nav.includes('Direct Owner • Zero Brokerage'));
+const nav=readFileSync(new URL('../src/components/Navbar.tsx',import.meta.url),'utf8');assert(nav.includes('Pay Zero Commission'));assert(!nav.includes('Direct Owner • Zero Brokerage'));
 console.log('PASS rendered posting UI: Ladies Mess/PG, Balasore localities, custom input only under Other (including districts without presets), explicit platform commission wording');
