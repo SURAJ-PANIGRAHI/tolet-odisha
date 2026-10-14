@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { compareListings } from '@/lib/listing-sort';
 import { portalEnabled } from '@/lib/client/portal';
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase, Listing } from '@/lib/supabase';
@@ -122,16 +123,7 @@ export default function Home() {
       }
 
       return true;
-    }).sort((a, b) => {
-      const dateDifference = Date.parse(a.created_at) - Date.parse(b.created_at);
-      // Paid boosts retain priority across sort modes; filters still apply.
-      if (portalEnabled && a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
-      if (sortBy === 'recommended') return Number(b.ranking_score || 0) - Number(a.ranking_score || 0) || -dateDifference || a.id.localeCompare(b.id);
-      if (sortBy === 'oldest') return dateDifference || a.id.localeCompare(b.id);
-      if (sortBy === 'price-low') return a.rent_monthly - b.rent_monthly || -dateDifference || a.id.localeCompare(b.id);
-      if (sortBy === 'price-high') return b.rent_monthly - a.rent_monthly || -dateDifference || a.id.localeCompare(b.id);
-      return -dateDifference || a.id.localeCompare(b.id);
-    });
+    }).sort((a, b) => compareListings(a, b, sortBy, portalEnabled));
   }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, budgetLimit, searchQuery, clock]);
 
   return (
@@ -266,6 +258,7 @@ export default function Home() {
             <select value={sortBy} onChange={event => setSortBy(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
               {portalEnabled ? <option value="recommended">Recommended</option> : null}
               <option value="newest">Newest first</option>
+              <option value="verified">Verified Profile</option>
               <option value="oldest">Oldest first</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>

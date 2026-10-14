@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { managementPath as normalizeManagementPath, saveListing } from '@/lib/client/saved-listings';
 import { LocalityPicker } from './LocalityPicker';
 import { portalEnabled, postingSession } from '@/lib/client/portal';
 import { supabase } from '@/lib/supabase';
@@ -16,8 +18,8 @@ interface PostAdModalProps {
 }
 
 export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuccess, isOdia }) => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [managementPath, setManagementPath] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
@@ -39,21 +41,6 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
-  if (managementPath) return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div role="dialog" aria-modal="true" aria-labelledby="submitted-heading" className="max-w-lg w-full rounded-3xl bg-white p-6 space-y-4">
-        <h2 id="submitted-heading" className="text-xl font-bold">{isOdia ? 'ବିଜ୍ଞାପନ ପଠାଯାଇଛି' : 'Listing submitted'}</h2>
-        <p>{isOdia ? 'ନିଜ ବିଜ୍ଞାପନ ହଟାଇବା ପାଇଁ ଏହି ଗୋପନୀୟ ଲିଙ୍କ୍ ସଞ୍ଚୟ କରନ୍ତୁ। ଏହା ଅନ୍ୟ କାହାକୁ ଦିଅନ୍ତୁ ନାହିଁ।' : 'Save this private management link. Anyone with it can manage your property, so keep it private. Sign in for easier dashboard access.'}</p>
-        <label htmlFor="management-link" className="block font-semibold">{isOdia ? 'ଗୋପନୀୟ ଲିଙ୍କ୍' : 'Your private management link'}</label>
-        <input id="management-link" readOnly value={`${window.location.origin}${managementPath}`} onFocus={event => event.currentTarget.select()} className="w-full rounded border p-3 text-sm" />
-        <a href={managementPath} className="block text-[#005B94] underline">{isOdia ? 'ବିଜ୍ଞାପନ ପରିଚାଳନା କରନ୍ତୁ' : 'Open management page'}</a>
-        <p className="text-sm text-slate-600">{isOdia ? '୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : 'Your listing is live and expires after 30 days. Email is optional; verify it for an Email verified badge and a reminder three days before expiry.'}</p>
-        <button type="button" onClick={() => { setManagementPath(''); onClose(); }} className="rounded bg-[#005B94] px-5 py-3 text-white">{isOdia ? 'ସମାପ୍ତ' : 'Done — I have saved the link'}</button>
-      </div>
-    </div>
-  );
-
-
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
       prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
@@ -153,11 +140,16 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       }
 
       const result = await response.json();
-      setManagementPath(result.management_path);
+      const path = normalizeManagementPath(result.management_path);
+      if (!path) throw new Error('Your listing was submitted, but the management link could not be loaded. Please contact support before posting again.');
+      const id = new URL(path, window.location.origin).searchParams.get('listing')!;
+      saveListing({ id, path, title, locality: `${submittedLocality}, ${district.split(' ')[0]}`, rent: Number(rent), savedAt: new Date().toISOString() });
+      // A failed optional email request must never turn a successful listing into a retry.
       if (portalEnabled && session?.user.is_anonymous && contactEmail.trim()) {
-        await supabase.auth.updateUser({ email: contactEmail.trim() }, { emailRedirectTo: window.location.origin + '/dashboard' });
+        void supabase.auth.updateUser({ email: contactEmail.trim() }, { emailRedirectTo: window.location.origin + '/dashboard' }).catch(() => {});
       }
       onSuccess();
+      router.push('/listing-posted#manage=' + encodeURIComponent(path));
     } catch (err: unknown) {
       const error = err as { message?: string };
       setErrorMsg(error.message || 'Error creating listing');
@@ -177,7 +169,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           <div>
             <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-1.5">
               <Sparkles className="w-5 h-5 text-[#005B94]" />
-              <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : 'Post Free Advertisement'}</span>
+              <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : 'Post Free Listing'}</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium">
               {isOdia ? '୧୦୦% ମାଗଣା • ସଙ୍ଗେ ସଙ୍ଗେ ପ୍ରକାଶିତ ହେବ' : '100% Free • Published immediately'}
@@ -185,6 +177,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           </div>
           <button
             onClick={onClose}
+            aria-label="Close listing form"
             className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -203,7 +196,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           {/* Title */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              {isOdia ? 'ବିଜ୍ଞାପନର ଶୀର୍ଷକ *' : 'Ad Title *'}
+              {isOdia ? 'ବିଜ୍ଞାପନର ଶୀର୍ଷକ *' : 'Listing Title *'}
             </label>
             <input
               type="text"

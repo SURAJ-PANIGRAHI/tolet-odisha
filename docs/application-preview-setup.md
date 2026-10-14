@@ -82,3 +82,13 @@ Business advertising enquiries stay separate at `/advertise`: WhatsApp **+91 742
 Run `npm test`, `npm run test:portal`, `npm run test:whatsapp`, `npm run test:application`, `npm run lint`, and `npm run build -- --webpack`. Meaningful PostgreSQL tests cover guest cap, management keys/claims, payment receipt reuse, ranking, independent phone verification, ID privacy/orphans, expiry/reminders, email leases, report deduplication and permissions. Route tests cover CSRF, trusted session identity, editable field whitelists, strict ID types and payment gates. Email tests use stubs and send no real messages.
 
 A successful build does not establish real Google login, SMTP delivery, Evolution connectivity, bank credit, hosted cron execution or browser interaction. Those require an end-to-end staging acceptance test with the external configuration above. No production migration, paid subscription or payment was performed while preparing this code.
+
+
+## Dashboard and posting review (14 October)
+
+- The current preview still uses the existing listings API unless portal v2 is enabled. New submissions now open `/listing-posted` with a private management credential in the URL fragment and save the link in this browser.
+- `/dashboard` shows browser-saved properties before sign-in. Earlier guest listings can be restored using their private management links; a phone number or email address alone never grants ownership. Saved cards are bookmarks, not authoritative availability records.
+- Storage is scoped to the website origin. Use the stable branch preview URL consistently. To move between preview URLs, production, or devices, copy your private management link and import it on the destination dashboard. Clearing browser data removes local bookmarks. Existing guest management currently supports removal; the full edit/renew/account dashboard requires the portal setup above.
+- The Google button checks Supabase's public Auth settings and is disabled with an explanation when the provider is unavailable. Google was disabled and email enabled during this review. Enabling Google still requires the Google OAuth client and allowed callback/redirect URLs in Supabase. An icon alone does not configure OAuth.
+- Verified Profile sorting uses ID 200, WhatsApp 100 and email 50 points; paid Featured placement remains first when portal ranking is enabled. Ties use newest first.
+- `npm run test:preview` verifies the actual form submit handler with mocked network calls, failed submissions, management-link persistence, storage failure, verification sorting, and rendered UI/contact intents. Local Chromium crashed before launch; this is not a completed live browser/auth/payment test.
