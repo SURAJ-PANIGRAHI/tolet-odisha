@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
             <span>{isOdia ? 'ବ୍ୟବସାୟ ପ୍ରଚାର' : 'Advertise With Us'}</span>
           </a>
 
-          <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs sm:text-sm font-bold text-[#005B94] shadow-sm transition hover:bg-sky-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005B94]"><LayoutDashboard className="h-4 w-4" aria-hidden="true"/>{isOdia ? 'ମୋ ଖାତା' : 'My Dashboard'}</Link>
+          <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs sm:text-sm font-bold text-[#005B94] shadow-sm transition hover:bg-sky-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005B94]"><LayoutDashboard className="h-4 w-4" aria-hidden="true"/>{isOdia ? 'ମୋ ବିଜ୍ଞାପନ' : 'Manage My Listings'}</Link>
 
           {/* Language Toggle */}
           <button

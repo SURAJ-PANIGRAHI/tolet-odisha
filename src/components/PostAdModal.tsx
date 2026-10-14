@@ -186,7 +186,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>Post without an account, or sign in with email or Google to manage your listings easily. Verification builds trust.</p><Link href="/dashboard" className="text-[#005B94] underline">Sign in with email or Google</Link><p className="mt-1 text-slate-600">You can continue below without signing in.</p></div>
+          <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>No account needed. After posting, you’ll receive a private link to manage your listing.</p><Link href="/dashboard" className="text-[#005B94] underline">Already have an account? Sign in</Link></div>
           {errorMsg && (
             <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl font-medium">
               {errorMsg}
