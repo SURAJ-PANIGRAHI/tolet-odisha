@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { AdvertiserSession } from '@/components/AdvertiserSession';
 
 export const metadata: Metadata = {
   title: 'ToLet Odisha | To-Let Rooms, Hostels & Flats in Balasore & Odisha',
@@ -23,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans bg-[#f8fafc]">
-        {children}
+        <AdvertiserSession>{children}</AdvertiserSession>
       </body>
     </html>
   );

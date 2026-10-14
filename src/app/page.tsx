@@ -52,6 +52,9 @@ export default function Home() {
   // Fetch public listings once, ignoring results after unmount.
   useEffect(() => {
     let cancelled = false;
+    if (new URLSearchParams(window.location.search).get('post') === '1') {
+      queueMicrotask(() => { if (!cancelled) setIsPostModalOpen(true); });
+    }
     async function load() {
       try {
         const { data, error } = await supabase.from('listings').select('*')

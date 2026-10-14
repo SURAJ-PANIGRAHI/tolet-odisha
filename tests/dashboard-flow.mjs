@@ -40,18 +40,18 @@ assert.equal(sort.compareListings(email,unverified,'verified',false)<0,true);
 // Exercise the actual form submit handler, with only network/auth and React state mocked.
 const data=load('src/data/odisha.ts');
 let stateIndex=0, navigation='', success=0, request;
-const values=[false,'Test property','','Boys Mess','Owner','4500','','','','Balasore','Azimabad','','','','Test Host','9876543210',[],[],''];
+const values=['00000000-0000-4000-8000-000000000005',false,'Test property','','Boys Mess','Owner','4500','','','','Balasore','Azimabad','','','Test Host','9876543210',[],[],''];
 const mockReact={...React,default:React,useState:initial=>{const idx=stateIndex++;return [values[idx]??initial,next=>{values[idx]=next;}];}};
 const {PostAdModal}=load('src/components/PostAdModal.tsx',{
- react:mockReact,'next/navigation':{useRouter:()=>({push:p=>{navigation=p;}})},'next/link':{default:()=>null},
- '@/lib/client/saved-listings':saved,'./LocalityPicker':{LocalityPicker:()=>null},'@/lib/client/portal':{portalEnabled:false},'@/lib/supabase':{supabase:{}},'@/data/odisha':data
+ './AdvertiserSignIn':{AdvertiserSignIn:()=>null},'./AdvertiserSession':{useAdvertiserSession:()=>({ready:true,session:{user:{email:'test@example.test'}}}),isAdvertiserSession:()=>true},react:mockReact,'next/navigation':{useRouter:()=>({push:p=>{navigation=p;}})},'next/link':{default:()=>null},
+ '@/lib/client/saved-listings':saved,'./LocalityPicker':{LocalityPicker:()=>null},'@/lib/client/portal':{portalEnabled:false},'@/lib/supabase':{supabase:{auth:{getSession:async()=>({data:{session:{access_token:'test',user:{email:'test@example.test'}}}})}}},'@/data/odisha':data
 });
 function find(element,type){if(!element||typeof element!=='object')return; if(element.type===type)return element;for(const child of [element.props?.children].flat(Infinity)){const found=find(child,type);if(found)return found;}}
-globalThis.fetch=async (url,options)=>{request={url,body:JSON.parse(options.body)};return {ok:true,json:async()=>({saved:true,management_path:original})};};
+globalThis.fetch=async (url,options)=>{request={url,body:JSON.parse(options.body)};return {ok:true,json:async()=>({saved:true,account_owned:true,listing_id:id})};};
 let tree=PostAdModal({isOpen:true,isOdia:false,onClose:()=>{},onSuccess:()=>{success++;}});
 await find(tree,'form').props.onSubmit({preventDefault(){}});
 assert.equal(request.url,'/api/listings');assert.equal(request.body.listing.locality,'Azimabad');assert.equal(success,1);
-assert.equal(navigation,'/listing-posted#manage='+encodeURIComponent(path));assert.equal(saved.savedListings()[0].title,'Test property');
+assert.equal(navigation,'/listing-posted?listing='+id);assert.deepEqual(saved.savedListings(),[]);
 // A failed request never shows a success page or stores an ownership link.
 saved.forgetListing(id);navigation='';stateIndex=0;
 globalThis.fetch=async()=>({ok:false,json:async()=>({error:'Please try later'})});
@@ -64,4 +64,4 @@ const html=renderToStaticMarkup(React.createElement(Advertise));
 assert(html.includes('Chat on WhatsApp'));assert(!html.includes('WhatsApp: +91'));
 const intent=html.match(/href="(https:\/\/wa.me\/[^\"]+)"/)[1].replaceAll('&amp;','&');
 assert.equal(new URL(intent).pathname,'/917428975781');assert.match(new URL(intent).searchParams.get('text'),/Business name:/);
-console.log('PASS guest post → private success URL → saved dashboard link; failed post; storage unavailable; old-link restoration; verified ranking and boost priority; WhatsApp enquiry intent');
+console.log('PASS signed-in post → account confirmation; old private-link persistence; failed post; storage unavailable; old-link restoration; verified ranking and boost priority; WhatsApp enquiry intent');

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAdvertiserSession, isAdvertiserSession } from './AdvertiserSession';
 import Link from 'next/link';
 import { Home, PlusCircle, Globe, Sparkles, LayoutDashboard } from 'lucide-react';
 
@@ -11,6 +12,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostModal }) => {
+  const { session } = useAdvertiserSession();
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -47,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
             <span>{isOdia ? 'ବ୍ୟବସାୟ ପ୍ରଚାର' : 'Advertise With Us'}</span>
           </a>
 
-          <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs sm:text-sm font-bold text-[#005B94] shadow-sm transition hover:bg-sky-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005B94]"><LayoutDashboard className="h-4 w-4" aria-hidden="true"/>{isOdia ? 'ମୋ ବିଜ୍ଞାପନ' : 'Manage My Listings'}</Link>
+          {isAdvertiserSession(session) ? <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-xs sm:text-sm font-bold text-[#005B94] shadow-sm transition hover:bg-sky-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005B94]"><LayoutDashboard className="h-4 w-4" aria-hidden="true"/>{isOdia ? 'ମୋ ବିଜ୍ଞାପନ' : 'Manage My Listings'}</Link> : null}
 
           {/* Language Toggle */}
           <button

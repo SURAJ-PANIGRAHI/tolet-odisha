@@ -157,6 +157,7 @@ export async function POST(request: Request) {
     }
     switch (action) {
       case "create": {
+        if (!auth || auth.user.is_anonymous || !auth.user.email_confirmed_at) return reply({ error: 'Sign in with Google or email before posting.' }, 401);
         const row = validatePortalListing(input.listing);
         if (!(await consumeQuota("portal-post-global", 50)))
           return reply({ error: "Please try again later." }, 429);
@@ -168,6 +169,8 @@ export async function POST(request: Request) {
         });
         return reply({
           saved: true,
+          account_owned: true,
+          listing_id: id,
           management_path: `/manage?portal=1&listing=${id}#key=${key}`,
         });
       }

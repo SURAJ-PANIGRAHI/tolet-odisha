@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { managementPath as normalizeManagementPath, saveListing } from '@/lib/client/saved-listings';
 import { LocalityPicker } from './LocalityPicker';
-import { portalEnabled, postingSession } from '@/lib/client/portal';
+import { AdvertiserSignIn } from './AdvertiserSignIn';
+import { useAdvertiserSession, isAdvertiserSession } from './AdvertiserSession';
+import { portalEnabled } from '@/lib/client/portal';
 import { supabase } from '@/lib/supabase';
 import { ODISHA_DISTRICTS, CATEGORIES, POPULAR_AMENITIES, COMMERCIAL_TYPES } from '@/data/odisha';
 import { X, Upload, Check, Loader2, Sparkles } from 'lucide-react';
@@ -19,6 +21,8 @@ interface PostAdModalProps {
 
 export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuccess, isOdia }) => {
   const router = useRouter();
+  const auth = useAdvertiserSession();
+  const [requestId] = useState(() => crypto.randomUUID());
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -33,7 +37,6 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [locality, setLocality] = useState('');
   const [customLocality, setCustomLocality] = useState('');
   const [landmark, setLandmark] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -41,6 +44,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
+  if (!auth.ready || !isAdvertiserSession(auth.session)) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div role="dialog" aria-modal="true" aria-label="Sign in to post" className="relative w-full max-w-md"><button type="button" aria-label="Close sign-in" onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 p-2 text-slate-600"><X size={18}/></button>{auth.ready ? <AdvertiserSignIn forPosting/> : <p role="status" className="rounded-2xl bg-white p-8">Checking your sign-in…</p>}</div></div>;
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
       prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
@@ -84,7 +88,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     setLoading(true);
 
     try {
-      const session = portalEnabled ? await postingSession() : null;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!isAdvertiserSession(session)) throw new Error('Please sign in again before posting.');
       const imageUrls: string[] = [];
 
       // Upload photos if any
@@ -111,7 +116,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       // Insert listing into Supabase
       const response = await fetch(portalEnabled ? '/api/portal' : '/api/listings', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
-        body: JSON.stringify({ ...(portalEnabled ? { action: 'create' } : {}), email: contactEmail, listing:
+        body: JSON.stringify({ ...(portalEnabled ? { action: 'create' } : {}), request_id: requestId, listing:
         {
           title,
           description: description || null,
@@ -140,14 +145,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       }
 
       const result = await response.json();
+      if (result.account_owned && typeof result.listing_id === 'string' && /^[0-9a-f-]{36}$/i.test(result.listing_id)) {
+        onSuccess(); router.push('/listing-posted?listing=' + result.listing_id); return;
+      }
       const path = normalizeManagementPath(result.management_path);
       if (!path) throw new Error('Your listing was submitted, but the management link could not be loaded. Please contact support before posting again.');
       const id = new URL(path, window.location.origin).searchParams.get('listing')!;
       saveListing({ id, path, title, locality: `${submittedLocality}, ${district.split(' ')[0]}`, rent: Number(rent), savedAt: new Date().toISOString() });
-      // A failed optional email request must never turn a successful listing into a retry.
-      if (portalEnabled && session?.user.is_anonymous && contactEmail.trim()) {
-        void supabase.auth.updateUser({ email: contactEmail.trim() }, { emailRedirectTo: window.location.origin + '/dashboard' }).catch(() => {});
-      }
       onSuccess();
       router.push('/listing-posted#manage=' + encodeURIComponent(path));
     } catch (err: unknown) {
@@ -186,7 +190,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>No account needed. After posting, you’ll receive a private link to manage your listing.</p><Link href="/dashboard" className="text-[#005B94] underline">Already have an account? Sign in</Link></div>
+          <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>Your listing will be saved to your account. You can manage it from any device.</p><Link href="/dashboard" className="mt-1 inline-flex font-semibold text-[#005B94]">Manage My Listings</Link></div>
           {errorMsg && (
             <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl font-medium">
               {errorMsg}
@@ -356,11 +360,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="owner-email">{isOdia ? 'ଆପଣଙ୍କ ଇମେଲ୍ (ଇଚ୍ଛାଧୀନ)' : 'Your email (optional)'}</label>
-            <input id="owner-email" type="email" maxLength={254} value={contactEmail} onChange={event => setContactEmail(event.target.value)} className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm" />
-            <p className="mt-1 text-xs text-slate-500">{isOdia ? 'ଇମେଲ୍ ଦେବା ବାଧ୍ୟତାମୂଳକ ନୁହେଁ। କେବଳ ନିଶ୍ଚିତ ଇମେଲ୍‌କୁ ନବୀକରଣ ସୂଚନା ମିଳିବ। ୩୦ ଦିନ ପରେ ବିଜ୍ଞାପନ ହଟିବ।' : 'Email is not required. A renewal reminder is sent three days before expiry only if you provide and verify an email. Without renewal, your ad is removed after 30 days.'}</p>
-          </div>
+          <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Account email</p><p className="mt-1 break-all text-sm text-slate-600">{auth.session?.user.email}</p><p className="mt-1 text-xs text-slate-500">Your email stays private. Renewal reminders use your confirmed account email. Listings expire after 30 days unless renewed.</p></div>
           {/* Amenities Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">

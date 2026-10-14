@@ -11,7 +11,8 @@
     "test:portal": "node tests/portal-v2-db.mjs && node tests/portal-cleanup-worker.mjs",
     "test:whatsapp": "node tests/evolution-whatsapp.mjs && node tests/portal-v2-db.mjs",
     "test:application": "node tests/portal-api.mjs && node tests/portal-id-route.mjs && node tests/portal-email.mjs && node tests/portal-application-db.mjs",
-    "test:preview": "node tests/preview-ui.mjs && node tests/dashboard-flow.mjs"
+    "test:preview": "node tests/preview-ui.mjs && node tests/dashboard-flow.mjs",
+    "test:accounts": "node tests/advertiser-routes.mjs && node tests/advertiser-accounts-db.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",

@@ -1,0 +1,36 @@
+"use client";
+import { useEffect, useState } from 'react';
+import { Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { GoogleIcon } from './BrandIcons';
+import { useAdvertiserSession } from './AdvertiserSession';
+export function AdvertiserSignIn({ forPosting = false }: { forPosting?: boolean }) {
+ const {session}=useAdvertiserSession();
+ const [email,setEmail]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[google,setGoogle]=useState(false),[sent,setSent]=useState(false);
+ useEffect(()=>{
+  const controller=new AbortController();
+  fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`,{headers:{apikey:process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||''},signal:controller.signal,cache:'no-store'})
+   .then(async response=>{if(!response.ok)throw Error();const body=await response.json();if(!controller.signal.aborted)setGoogle(body.external?.google===true);})
+   .catch(()=>{if(!controller.signal.aborted)setGoogle(false);});
+  return ()=>controller.abort();
+ },[]);
+ async function signIn(provider:'email'|'google') {
+  if(busy)return;setBusy(true);setMessage('');
+  const redirect=window.location.origin+'/dashboard'+(forPosting?'?post=1':'');
+  try{
+   if(forPosting) { try { sessionStorage.setItem('tolet:post-intent','1'); } catch { /* Redirect query preserves intent. */ } }
+   if(provider==='google'){
+    const {error}=session?.user.is_anonymous?await supabase.auth.linkIdentity({provider:'google',options:{redirectTo:redirect}}):await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect}});
+    if(error)throw error;
+   }else{
+    const {error}=session?.user.is_anonymous?await supabase.auth.updateUser({email:email.trim()},{emailRedirectTo:redirect}):await supabase.auth.signInWithOtp({email:email.trim(),options:{emailRedirectTo:redirect}});
+    if(error)throw error;setSent(true);setMessage('Open the sign-in link in your inbox. You can return here once you’re signed in.');
+   }
+  }catch(error){setMessage(error instanceof Error?error.message:'Unable to sign in. Please try again.');}finally{setBusy(false);}
+ }
+ return <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><span className="inline-flex rounded-xl bg-sky-50 p-3 text-[#005B94]"><ShieldCheck size={24}/></span><h2 className="mt-4 text-xl font-bold">{forPosting?'Sign in to post your property':'Your advertiser account'}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{forPosting?'One sign-in keeps your listings together, so you can manage them from any device.':'Sign in to view and manage the properties linked to your account.'}</p>
+ <button type="button" disabled={!google||busy} onClick={()=>void signIn('google')} className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"><GoogleIcon/>Continue with Google</button>
+ <div className="my-5 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200"/>or use any email address<span className="h-px flex-1 bg-slate-200"/></div>
+ <form onSubmit={e=>{e.preventDefault();void signIn('email');}} className="space-y-3"><label htmlFor="advertiser-email" className="block text-sm font-semibold">Email address</label><div className="relative"><Mail className="absolute left-3 top-3.5 text-slate-400" size={18}/><input id="advertiser-email" type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-3 text-sm focus:outline-[#005B94]"/></div><button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#005B94] px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{busy?'Please wait…':sent?'Send another sign-in link':'Continue with email'}<ArrowRight size={17}/></button></form>
+ {message?<p role="status" className="mt-4 rounded-xl bg-sky-50 p-3 text-sm text-[#005B94]">{message}</p>:null}<p className="mt-4 text-center text-xs text-slate-500">No password needed. Government ID is optional.</p></section>;
+}

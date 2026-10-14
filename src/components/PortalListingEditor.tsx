@@ -14,11 +14,13 @@ import {
 export function PortalListingEditor({
   listing,
   managementKey,
+  persistListing,
   onClose,
   onSaved,
 }: {
   listing: Listing;
   managementKey?: string;
+  persistListing?: (listing: Listing) => Promise<unknown>;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -61,7 +63,8 @@ export function PortalListingEditor({
             .publicUrl,
         );
       }
-      await portalCall("edit", {
+      if (persistListing) await persistListing({ ...row, images });
+      else await portalCall("edit", {
         listing_id: row.id,
         key: managementKey,
         listing: { ...row, images },

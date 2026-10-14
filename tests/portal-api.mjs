@@ -125,11 +125,15 @@ let response = await route.POST(
     actor: other,
   }),
 );
+assert.equal(response.status, 401);
+guest = false;
+response = await route.POST(req({ action: "create", listing: row }));
 assert.equal(response.status, 200);
 assert((await response.json()).management_path.includes("#key="));
 assert.equal(queries.at(-1).args.p_actor, id);
 assert.equal(queries.at(-1).args.p_listing.user_id, undefined);
 assert.equal(queries.at(-1).args.p_listing.is_id_verified, undefined);
+guest = true;
 assert.equal(
   (await route.POST(req({ action: "payment", kind: "multi_listing" }))).status,
   401,
@@ -196,5 +200,5 @@ assert.equal(
   503,
 );
 console.log(
-  "PASS portal API: staging gate, guest posting, trusted actor, editable whitelist, CSRF, payment gate/amount/payee, bank-admin restriction, private key access and quota",
+  "PASS portal API: staging gate, authenticated posting, trusted actor, editable whitelist, CSRF, payment gate/amount/payee, bank-admin restriction, private key access and quota",
 );
