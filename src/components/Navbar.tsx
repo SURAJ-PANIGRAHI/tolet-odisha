@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Home, PlusCircle, Globe, Sparkles } from 'lucide-react';
 
 interface NavbarProps {
@@ -29,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
               </span>
             </div>
             <p className="text-[11px] font-medium text-slate-500 -mt-0.5">
-              {isOdia ? 'ସିଧାସଳଖ ଘର ମାଲିକଙ୍କ ସହ କଥା ହୁଅନ୍ତୁ' : 'Direct Owner • Zero Brokerage'}
+              {isOdia ? 'ଆମ ପକ୍ଷରୁ କୌଣସି କମିଶନ୍ ନାହିଁ' : 'No commission charged by ToLet Odisha'}
             </p>
           </div>
         </div>
@@ -38,15 +39,15 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Dedicated Advertise With Us Link */}
           <a
-            href="https://wa.me/919437159484?text=Namaskar%20Suraj!%20I%20want%20to%20advertise%20my%20business%20on%20ToLetOdisha."
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/advertise"
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer"
             title="Advertise your local restaurant, coaching or business"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-600" />
             <span>{isOdia ? 'ବ୍ୟବସାୟ ପ୍ରଚାର' : 'Advertise With Us'}</span>
           </a>
+
+          <Link href="/dashboard" className="text-xs font-semibold text-[#005B94] underline">{isOdia ? 'ମୋ ଖାତା' : 'My Dashboard'}</Link>
 
           {/* Language Toggle */}
           <button

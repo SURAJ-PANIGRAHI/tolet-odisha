@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { LocalityPicker } from './LocalityPicker';
+import { portalEnabled, postingSession } from '@/lib/client/portal';
 import { supabase } from '@/lib/supabase';
-import { ODISHA_DISTRICTS, DISTRICT_LOCALITIES, CATEGORIES, POPULAR_AMENITIES } from '@/data/odisha';
+import { ODISHA_DISTRICTS, CATEGORIES, POPULAR_AMENITIES, COMMERCIAL_TYPES } from '@/data/odisha';
 import { X, Upload, Check, Loader2, Sparkles } from 'lucide-react';
 
 interface PostAdModalProps {
@@ -18,10 +21,15 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
+  const [advertiserType, setAdvertiserType] = useState('');
   const [rent, setRent] = useState('');
+  const [commercialType, setCommercialType] = useState('');
+  const [areaSqft, setAreaSqft] = useState('');
+  const isCommercial = category === 'Commercial / Shop';
   const [deposit, setDeposit] = useState('');
   const [district, setDistrict] = useState(ODISHA_DISTRICTS.find(d => d.startsWith('Balasore')) || ODISHA_DISTRICTS[0]);
   const [locality, setLocality] = useState('');
+  const [customLocality, setCustomLocality] = useState('');
   const [landmark, setLandmark] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactName, setContactName] = useState('');
@@ -35,7 +43,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
       <div role="dialog" aria-modal="true" aria-labelledby="submitted-heading" className="max-w-lg w-full rounded-3xl bg-white p-6 space-y-4">
         <h2 id="submitted-heading" className="text-xl font-bold">{isOdia ? 'ବିଜ୍ଞାପନ ପଠାଯାଇଛି' : 'Listing submitted'}</h2>
-        <p>{isOdia ? 'ନିଜ ବିଜ୍ଞାପନ ହଟାଇବା ପାଇଁ ଏହି ଗୋପନୀୟ ଲିଙ୍କ୍ ସଞ୍ଚୟ କରନ୍ତୁ। ଏହା ଅନ୍ୟ କାହାକୁ ଦିଅନ୍ତୁ ନାହିଁ।' : 'Save this private link to remove your listing whenever you want. Anyone with this link can remove your ad, so keep it private.'}</p>
+        <p>{isOdia ? 'ନିଜ ବିଜ୍ଞାପନ ହଟାଇବା ପାଇଁ ଏହି ଗୋପନୀୟ ଲିଙ୍କ୍ ସଞ୍ଚୟ କରନ୍ତୁ। ଏହା ଅନ୍ୟ କାହାକୁ ଦିଅନ୍ତୁ ନାହିଁ।' : 'Save this private management link. Anyone with it can manage your property, so keep it private. Sign in for easier dashboard access.'}</p>
         <label htmlFor="management-link" className="block font-semibold">{isOdia ? 'ଗୋପନୀୟ ଲିଙ୍କ୍' : 'Your private management link'}</label>
         <input id="management-link" readOnly value={`${window.location.origin}${managementPath}`} onFocus={event => event.currentTarget.select()} className="w-full rounded border p-3 text-sm" />
         <a href={managementPath} className="block text-[#005B94] underline">{isOdia ? 'ବିଜ୍ଞାପନ ପରିଚାଳନା କରନ୍ତୁ' : 'Open management page'}</a>
@@ -45,7 +53,6 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     </div>
   );
 
-  const currentLocalities = DISTRICT_LOCALITIES[district.split(' ')[0]] || [];
 
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
@@ -68,11 +75,16 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     e.preventDefault();
     setErrorMsg('');
 
-    if (!title || !rent || !district || !locality || !contactName || !contactPhone) {
+    const submittedLocality = (locality === 'Other / ଅନ୍ୟାନ୍ୟ' ? customLocality : locality).trim();
+    if (!title || !rent || !district || !submittedLocality || !contactName || !contactPhone || !advertiserType) {
       setErrorMsg(isOdia ? 'ଦୟାକରି ସମସ୍ତ ଆବଶ୍ୟକୀୟ ତଥ୍ୟ ପୂରଣ କରନ୍ତୁ।' : 'Please fill all required fields.');
       return;
     }
 
+    if ((isCommercial && !commercialType) || (areaSqft && (!Number.isInteger(Number(areaSqft)) || Number(areaSqft) <= 0 || Number(areaSqft) > 10000000))) {
+      setErrorMsg('Choose a commercial type. Area is optional; if provided, enter a positive whole number up to 10,000,000.');
+      return;
+    }
     const phone = contactPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
     if (!/^[6-9]\d{9}$/.test(phone) || !Number.isInteger(Number(rent)) || Number(rent) < 0 || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0) {
       setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
@@ -85,6 +97,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     setLoading(true);
 
     try {
+      const session = portalEnabled ? await postingSession() : null;
       const imageUrls: string[] = [];
 
       // Upload photos if any
@@ -109,17 +122,20 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       }
 
       // Insert listing into Supabase
-      const response = await fetch('/api/listings', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: contactEmail, listing:
+      const response = await fetch(portalEnabled ? '/api/portal' : '/api/listings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+        body: JSON.stringify({ ...(portalEnabled ? { action: 'create' } : {}), email: contactEmail, listing:
         {
           title,
           description: description || null,
           category,
+          advertiser_type: advertiserType,
+          commercial_type: isCommercial ? commercialType : null,
+          area_sqft: areaSqft ? Number(areaSqft) : null,
           rent_monthly: parseInt(rent, 10),
           deposit: deposit ? parseInt(deposit, 10) : 0,
           district: district.split(' ')[0],
-          locality,
+          locality: submittedLocality,
           landmark: landmark || null,
           contact_name: contactName,
           contact_phone: phone,
@@ -138,6 +154,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
       const result = await response.json();
       setManagementPath(result.management_path);
+      if (portalEnabled && session?.user.is_anonymous && contactEmail.trim()) {
+        await supabase.auth.updateUser({ email: contactEmail.trim() }, { emailRedirectTo: window.location.origin + '/dashboard' });
+      }
       onSuccess();
     } catch (err: unknown) {
       const error = err as { message?: string };
@@ -174,6 +193,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>Post without an account, or sign in with email or Google to manage your listings easily. Verification builds trust.</p><Link href="/dashboard" className="text-[#005B94] underline">Sign in with email or Google</Link><p className="mt-1 text-slate-600">You can continue below without signing in.</p></div>
           {errorMsg && (
             <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl font-medium">
               {errorMsg}
@@ -202,7 +222,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => { setCategory(e.target.value); setCommercialType(''); setAreaSqft(''); }}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
             >
               {CATEGORIES.filter(c => c.id !== 'All').map((cat) => (
@@ -212,6 +232,30 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               ))}
             </select>
           </div>
+
+          {isCommercial && <label className="block text-xs font-bold text-slate-700">
+            Commercial type *
+            <select required value={commercialType} onChange={event => setCommercialType(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              <option value="">Select commercial type</option>
+              {COMMERCIAL_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </label>}
+          {category !== 'Tutor / Tuition' && <label className="block text-xs font-bold text-slate-700">
+            Floor area (sq ft) — optional
+            <input type="number" min="1" max="10000000" step="1" value={areaSqft} onChange={event => setAreaSqft(event.target.value)} placeholder="Leave blank if not known" className="mt-1 w-full rounded-xl border border-slate-200 p-3 text-sm" />
+            {isCommercial && <span className="mt-1 block font-normal text-slate-500">Add the total space if known, in square feet. Describe floor, access and suitable uses below.</span>}
+          </label>}
+
+          <label className="block text-xs font-bold text-slate-700">
+            Listed by *
+            <select required value={advertiserType} onChange={event => setAdvertiserType(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
+              <option value="">Select your role</option>
+              <option value="Owner">Owner</option>
+              <option value="Broker">Broker</option>
+              <option value="Third Party">Third Party</option>
+            </select>
+            <span className="mt-1 block font-normal text-slate-500">Choose Third Party if you are posting on someone else’s behalf without acting as a broker.</span>
+          </label>
 
           {/* Rent & Deposit */}
           <div className="grid grid-cols-2 gap-3">
@@ -249,10 +293,12 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 {isOdia ? 'ଜିଲ୍ଲା (District) *' : 'District *'}
               </label>
               <select
+                aria-label="District"
                 value={district}
                 onChange={(e) => {
                   setDistrict(e.target.value);
                   setLocality('');
+                  setCustomLocality('');
                 }}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
               >
@@ -267,41 +313,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ସ୍ଥାନ / ଅଞ୍ଚଳ (Locality) *' : 'Locality / Area *'}
               </label>
-              {currentLocalities.length > 0 ? (
-                <div className="space-y-2">
-                  <select
-                    value={locality}
-                    onChange={(e) => setLocality(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-white"
-                  >
-                    <option value="">Select Area / Block</option>
-                    {currentLocalities.map((loc, idx) => (
-                      <option key={idx} value={loc}>
-                        {loc}
-                      </option>
-                    ))}
-                  </select>
-                  {(locality === 'Other / ଅନ୍ୟାନ୍ୟ' || !currentLocalities.includes(locality)) && (
-                    <input
-                      type="text"
-                      placeholder="Type your area, village or block name..."
-                      value={locality === 'Other / ଅନ୍ୟାନ୍ୟ' ? '' : locality}
-                      onChange={(e) => setLocality(e.target.value)}
-                      required
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94] bg-slate-50"
-                    />
-                  )}
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  placeholder="e.g. Nalamganj"
-                  value={locality}
-                  onChange={(e) => setLocality(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
-                />
-              )}
+              <LocalityPicker district={district} value={locality} customValue={customLocality} onChange={setLocality} onCustomChange={setCustomLocality} />
+
             </div>
           </div>
 

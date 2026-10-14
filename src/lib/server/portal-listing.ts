@@ -1,0 +1,95 @@
+import {
+  CATEGORIES,
+  COMMERCIAL_TYPES,
+  ODISHA_DISTRICTS,
+  POPULAR_AMENITIES,
+} from "@/data/odisha";
+import { indianPhone } from "./evolution";
+export function validatePortalListing(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("Invalid listing.");
+  const row = value as Record<string, unknown>;
+  for (const key of ["title", "district", "locality", "contact_name"])
+    if (
+      typeof row[key] !== "string" ||
+      !String(row[key]).trim() ||
+      String(row[key]).length > 200
+    )
+      throw new Error("Complete the required listing fields.");
+  const phone =
+    typeof row.contact_phone === "string"
+      ? indianPhone(row.contact_phone)
+      : null;
+  if (
+    !phone ||
+    !CATEGORIES.some((c) => c.id !== "All" && c.id === row.category) ||
+    !ODISHA_DISTRICTS.some((d) => d.split(" ")[0] === row.district) ||
+    !["Owner", "Broker", "Third Party"].includes(String(row.advertiser_type))
+  )
+    throw new Error(
+      "Check your category, district, advertiser type and mobile number.",
+    );
+  if (
+    !Number.isInteger(row.rent_monthly) ||
+    Number(row.rent_monthly) < 0 ||
+    Number(row.rent_monthly) > 10000000 ||
+    !Number.isInteger(row.deposit) ||
+    Number(row.deposit) < 0 ||
+    Number(row.deposit) > 10000000
+  )
+    throw new Error("Enter valid whole rupee amounts.");
+  if (
+    row.area_sqft != null &&
+    (!Number.isInteger(row.area_sqft) ||
+      Number(row.area_sqft) <= 0 ||
+      Number(row.area_sqft) > 10000000)
+  )
+    throw new Error("Check the optional floor area.");
+  if (
+    row.category === "Commercial / Shop"
+      ? !COMMERCIAL_TYPES.includes(
+          row.commercial_type as (typeof COMMERCIAL_TYPES)[number],
+        )
+      : row.commercial_type != null
+  )
+    throw new Error("Check the commercial property type.");
+  const prefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-images/listings/`;
+  if (
+    !Array.isArray(row.images) ||
+    row.images.length > 10 ||
+    row.images.some(
+      (url) =>
+        typeof url !== "string" || !url.startsWith(prefix) || url.length > 1000,
+    ) ||
+    !Array.isArray(row.amenities) ||
+    row.amenities.some((a) => !POPULAR_AMENITIES.includes(a)) ||
+    row.amenities.length > POPULAR_AMENITIES.length ||
+    String(row.description || "").length > 5000 ||
+    String(row.landmark || "").length > 200
+  )
+    throw new Error("Check your photos, description and amenities.");
+  // Whitelist editable fields. Never accept ownership, badges, moderation or expiry.
+  return Object.fromEntries(
+    [
+      "title",
+      "description",
+      "category",
+      "commercial_type",
+      "advertiser_type",
+      "area_sqft",
+      "rent_monthly",
+      "deposit",
+      "district",
+      "locality",
+      "landmark",
+      "contact_name",
+      "amenities",
+      "images",
+    ]
+      .map((key) => [key, row[key]])
+      .concat([
+        ["contact_phone", phone.slice(3)],
+        ["whatsapp_number", phone.slice(3)],
+      ]),
+  );
+}

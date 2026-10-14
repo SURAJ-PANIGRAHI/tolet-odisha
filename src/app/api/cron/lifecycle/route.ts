@@ -1,3 +1,4 @@
+import { dispatchPortalEmails } from '@/lib/server/portal-email';
 import { dispatchEmails, serverDb } from '@/lib/server/lifecycle';
 import { timingSafeEqual } from 'node:crypto';
 export const runtime = 'nodejs';
@@ -10,6 +11,10 @@ export async function GET(request: Request) {
   try {
     const { error } = await serverDb().rpc('run_listing_lifecycle');
     if (error) throw error;
-    return Response.json(await dispatchEmails(5));
+    const legacy = await dispatchEmails(5);
+    if (process.env.NEXT_PUBLIC_PORTAL_V2_ENABLED !== 'true') return Response.json(legacy);
+    const maintenance = await serverDb().rpc('portal_daily_maintenance');
+    if (maintenance.error) throw maintenance.error;
+    return Response.json({ legacy, portal: await dispatchPortalEmails(5) });
   } catch { return Response.json({ error: 'Lifecycle job failed' }, { status: 503 }); }
 }

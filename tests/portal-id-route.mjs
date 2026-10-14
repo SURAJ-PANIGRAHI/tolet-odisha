@@ -1,0 +1,14 @@
+import {readFileSync} from 'node:fs';import assert from 'node:assert/strict';import ts from 'typescript';
+let calls=[],hasAuth=true,sqlFail=false;
+const bucket={upload:async()=>{calls.push('upload');return {error:null};},remove:async()=>{calls.push('remove');return{error:null};}};
+const db={rpc:async(name)=>{calls.push(name);return{name,data:name==='portal_my_id_status'?[]:'ok',error:name==='portal_register_id_upload'&&sqlFail?{code:'23514'}:null};},from:()=>({select:()=>({eq:()=>({single:async()=>({data:{display_name:'Owner Name'},error:null})})})}),storage:{from:name=>{assert.equal(name,'portal-government-ids');return bucket;}}};
+const mod={exports:{}};const code=ts.transpileModule(readFileSync(new URL('../src/app/api/portal/id/route.ts',import.meta.url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+new Function('require','module','exports',code)(name=>name.includes('portal-auth')?{portalUser:async()=>hasAuth?{user:{id:'550e8400-e29b-41d4-a716-446655440000'},db}:null}:name.includes('lifecycle')?{consumeQuota:async()=>true}:name==='node:crypto'?{randomUUID:()=> '550e8400-e29b-41d4-a716-446655440001'}:{},mod,mod.exports);
+process.env.NEXT_PUBLIC_PORTAL_V2_ENABLED='true';
+const req=(type='passport',mime='image/jpeg',bytes=new Uint8Array([255,216,255,0]))=>{const form=new FormData();form.set('type',type);form.set('consent','yes');form.set('document',new File([bytes],'id.jpg',{type:mime}));return new Request('https://tolet.test/api/portal/id',{method:'POST',headers:{origin:'https://tolet.test'},body:form});};
+let result=await mod.exports.POST(req());assert.equal(result.status,200);assert(calls.indexOf('portal_prepare_id_upload')<calls.indexOf('upload'));assert(calls.indexOf('upload')<calls.indexOf('portal_register_id_upload'));
+calls=[];assert.equal((await mod.exports.POST(req('pan_card'))).status,400);assert(!calls.includes('upload'));
+assert.equal((await mod.exports.POST(req('passport','image/jpeg',new Uint8Array([1,2,3])))).status,400);assert(!calls.includes('upload'));
+hasAuth=false;assert.equal((await mod.exports.POST(req())).status,401);hasAuth=true;
+sqlFail=true;calls=[];assert.equal((await mod.exports.POST(req())).status,503);assert(calls.includes('remove'));
+console.log('PASS ID route: authenticated private upload, strict document types/image signatures, cleanup ticket before upload and orphan handling');

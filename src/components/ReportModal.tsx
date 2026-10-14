@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { portalCall, postingSession } from '@/lib/client/portal';
 import { type Listing } from '@/lib/supabase';
 
 const reasons = [
@@ -46,6 +47,12 @@ export function ReportModal({ listing, onClose, isOdia }: { listing: Listing; on
     if (submitLock.current || saved) return;
     submitLock.current = true; setBusy(true); setError('');
     try {
+      if (listing.portal_listing) {
+        await postingSession();
+        const labels: Record<string, string> = { fake: 'Fake listing', scam: 'Scam / Fraud', wrong_contact: 'Wrong contact number', unavailable: 'Already rented', misleading_photos: 'Misleading photos', wrong_information: 'Wrong information', duplicate: 'Duplicate listing', other: 'Other' };
+        await portalCall('report', { listing_id: listing.id, reason: labels[reason], description: note.trim() });
+        setSaved(true); return;
+      }
       const response = await fetch('/api/reports', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ listing_id: listing.id, reason, description: note.trim() || null }),

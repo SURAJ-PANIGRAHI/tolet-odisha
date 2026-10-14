@@ -1,0 +1,62 @@
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+const require=createRequire(import.meta.url);
+function load(path, mocks={}) {
+ const source=readFileSync(new URL('../'+path,import.meta.url),'utf8');
+ const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+ const loadedModule={exports:{}};
+ new Function('require','module','exports',compiled)(name=>name in mocks?mocks[name]:require(name),loadedModule,loadedModule.exports);
+ return loadedModule.exports;
+}
+const utils=load('src/lib/server/evolution.ts');
+const id='550e8400-e29b-41d4-a716-446655440000',nonce='a'.repeat(64),secret='s'.repeat(40);
+function event(overrides={}) { return {event:'messages.upsert',instance:'tolet',sender:'919999999999@s.whatsapp.net',data:{key:{remoteJid:'919876543210@s.whatsapp.net',fromMe:false,id:'message-1'},message:{conversation:`VERIFY_${id}_${nonce}`},messageTimestamp:Math.floor(Date.now()/1000)},...overrides}; }
+assert.equal(utils.indianPhone('+91 98765 43210'),'+919876543210');
+assert.equal(utils.indianPhone('12345'),null);
+assert.equal(utils.secretMatches(secret,secret),true);
+assert.equal(utils.secretMatches('é'.repeat(40),secret),false);
+assert.equal(utils.secretMatches(secret,'short'),false);
+const parsed=utils.parseEvolutionMessages(event(),'tolet');
+assert.equal(parsed[0].phone,'+919876543210');assert.equal(parsed[0].actor,id);
+for(const remoteJid of ['123@g.us','123@broadcast','123@lid']) {
+ const e=event();e.data.key.remoteJid=remoteJid;assert.deepEqual(utils.parseEvolutionMessages(e,'tolet'),[]);
+}
+let e=event();e.data.key.fromMe=true;assert.deepEqual(utils.parseEvolutionMessages(e,'tolet'),[]);
+e=event();e.data.message.conversation=`VERIFY_${id}`;assert.deepEqual(utils.parseEvolutionMessages(e,'tolet'),[]);
+e=event();e.data.key.remoteJid='123@lid';e.data.key.remoteJidAlt='919876543210@s.whatsapp.net';assert.equal(utils.parseEvolutionMessages(e,'tolet')[0].phone,'+919876543210');
+e=event();e.data.key.remoteJidAlt='919876543211@s.whatsapp.net';assert.deepEqual(utils.parseEvolutionMessages(e,'tolet'),[]);
+e=event();e.data.message={extendedTextMessage:{text:`VERIFY_${id}_${nonce}`}};assert.equal(utils.parseEvolutionMessages(e,'tolet').length,1);
+e=event();e.data.message={ephemeralMessage:{message:e.data.message}};assert.equal(utils.parseEvolutionMessages(e,'tolet').length,1);
+e=event();e.data.message={extendedTextMessage:{text:'Hello',contextInfo:{quotedMessage:e.data.message}}};assert.deepEqual(utils.parseEvolutionMessages(e,'tolet'),[]);
+assert.deepEqual(utils.parseEvolutionMessages(event(),'wrong-instance'),[]);
+assert.equal(utils.parseEvolutionMessages(event({event:'MESSAGES_UPSERT'}),'tolet').length,1);
+assert.throws(()=>utils.parseEvolutionMessages(event({data:Array(101).fill(event().data)}),'tolet'));
+const jsonRequest=(body,headers={})=>new Request('https://tolet.test/api/webhooks/whatsapp',{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify(body)});
+await assert.rejects(utils.readJsonLimited(jsonRequest({large:'x'.repeat(100)}),10));
+let calls=[],dbError=false;
+const db={rpc:async(name,args)=>{calls.push({name,args});return {data:'verified',error:dbError?{message:'failure'}:null};}};
+process.env.EVOLUTION_INSTANCE_NAME='tolet';process.env.EVOLUTION_WEBHOOK_SECRET=secret;
+const webhook=load('src/app/api/webhooks/whatsapp/route.ts',{'@/lib/server/evolution':utils,'@/lib/server/lifecycle':{serverDb:()=>db}});
+assert.equal((await webhook.POST(jsonRequest(event()))).status,401);assert.equal(calls.length,0);
+assert.equal((await webhook.POST(jsonRequest(event(),{'x-evolution-webhook-secret':secret}))).status,200);
+assert.equal(calls[0].args.p_sender,'+919876543210');assert.equal(calls[0].name,'portal_accept_whatsapp_verification');
+assert.equal((await webhook.POST(new Request('https://tolet.test',{method:'POST',headers:{'content-type':'application/json','x-evolution-webhook-secret':secret},body:'{broken'}))).status,400);
+dbError=true;assert.equal((await webhook.POST(jsonRequest(event(),{'x-evolution-webhook-secret':secret}))).status,503);
+let tokenSeen;
+const authDb={auth:{getUser:async token=>{tokenSeen=token;return {data:{user:token==='valid'?{id,email_confirmed_at:'2026-01-01',is_anonymous:false}:null},error:null};}},rpc:async(name,args)=>{calls.push({name,args});return {data:name==='portal_create_phone_challenge'?[{challenge_id:id,verification_text:`VERIFY_${id}_${nonce}`,valid_until:'2026-12-01'}]:[{verified:true,phone_number:'+919876543210'}],error:null};}};
+const auth=load('src/lib/server/portal-auth.ts',{'server-only':{},'./lifecycle':{serverDb:()=>authDb}});
+assert.equal(await auth.portalUser(new Request('https://tolet.test')),null);
+assert.equal((await auth.portalUser(new Request('https://tolet.test',{headers:{authorization:'Bearer valid'}}))).user.id,id);assert.equal(tokenSeen,'valid');
+process.env.WHATSAPP_BUSINESS_NUMBER='919999999999';
+const challengeRoute=load('src/app/api/verification/whatsapp/route.ts',{'@/lib/server/evolution':utils,'@/lib/server/portal-auth':auth});
+const challengeReq=(authorization='Bearer valid',origin='https://tolet.test')=>jsonRequest({phone:'9876543210',user_id:'attacker-controlled'},{authorization,origin});
+assert.equal((await challengeRoute.POST(challengeReq('Bearer invalid'))).status,401);
+assert.equal((await challengeRoute.POST(challengeReq('Bearer valid','https://evil.test'))).status,403);
+const response=await challengeRoute.POST(challengeReq());assert.equal(response.status,200);
+assert((await response.json()).whatsapp_url.startsWith('https://wa.me/919999999999?text='));
+assert.equal(calls.at(-1).args.p_actor,id);
+assert.equal((await challengeRoute.GET(new Request('https://tolet.test?challenge=bad',{headers:{authorization:'Bearer valid'}}))).status,400);
+assert.equal((await challengeRoute.GET(new Request('https://tolet.test',{headers:{authorization:'Bearer valid'}}))).status,200);
+console.log('PASS Evolution parser, authenticated webhook, retry handling, JWT-authenticated challenge/status routes, actor spoof rejection');

@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'ToLet Odisha | To-Let Rooms, Hostels & Flats in Balasore & Odisha',
-  description: 'Find Boys Mess, Girls Hostels, Bachelor Rooms, Family Flats and Houses for rent in Balasore and across Odisha without brokers. Contact owners directly via WhatsApp.',
+  description: 'Find rooms, Ladies Mess, PG accommodation, hostels, flats and commercial properties in Balasore and across Odisha. ToLet Odisha charges no rental commission. Contact property advertisers via WhatsApp.',
   keywords: ['To Let Balasore', 'Rooms in Balasore', 'Boys mess Balasore', 'Hostel Balasore', 'ToLet Odisha', 'Rent in Odisha', 'FM college rooms'],
   authors: [{ name: 'ToLet Odisha' }],
   manifest: '/manifest.json',

@@ -30,11 +30,8 @@ const DistrictSponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia 
     return () => clearInterval(timer);
   }, [sponsorsList.length]);
 
-  // Direct contact for platform promotion if no sponsor exists
-  const myWhatsAppNumber = '9437159484';
-  const advertiseUrl = `https://wa.me/91${myWhatsAppNumber}?text=${encodeURIComponent(
-    `Namaskar Suraj! I saw ToLetOdisha and I want to advertise my local business in ${cleanDistrict} district.`
-  )}`;
+  // Business enquiries are handled personally through WhatsApp or email.
+  const advertiseUrl = '/advertise';
 
   const currentSponsor: LocalSponsor | undefined = sponsorsList[currentIndex];
 
