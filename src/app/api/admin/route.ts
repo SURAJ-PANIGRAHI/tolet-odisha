@@ -1,3 +1,5 @@
+import {after} from 'next/server';
+import {dispatchSupportReplies} from '@/lib/server/support';
 import { portalUser } from '@/lib/server/portal-auth';
 import { readInput } from '@/lib/server/lifecycle';
 import { cleanupAccountIds,ID_BUCKET } from '@/lib/server/account-id';
@@ -14,6 +16,16 @@ async function administrator(request:Request){
 export async function GET(request:Request){
  try{
   const auth=await administrator(request);if(!auth)return reply({error:'Administrator sign-in required.'},403);
+  const params=new URL(request.url).searchParams;
+  if(params.get('scope')==='support'){
+   const ticket=params.get('ticket');
+   if(ticket){
+    if(!isUuid(ticket))return reply({error:'Invalid ticket.'},400);
+    const [messages,replies]=await Promise.all([auth.db.from('support_messages').select('id,body,created_at').eq('ticket_id',ticket).order('created_at',{ascending:true}).limit(100),auth.db.from('support_replies').select('id,body,created_at,sent_at,last_error').eq('ticket_id',ticket).order('created_at',{ascending:true}).limit(100)]);
+    if(messages.error||replies.error)throw new Error('Support messages unavailable');return reply({messages:messages.data,replies:replies.data});
+   }
+   const tickets=await auth.db.from('support_tickets').select('id,reference,phone,category,summary,status,created_at,updated_at').order('updated_at',{ascending:false}).limit(100);if(tickets.error)throw tickets.error;return reply({tickets:tickets.data});
+  }
   const id=new URL(request.url).searchParams.get('document');
   if(id){
    if(!isUuid(id))return reply({error:'Invalid document.'},400);
@@ -41,6 +53,14 @@ export async function POST(request:Request){
  try{
   const auth=await administrator(request);if(!auth)return reply({error:'Administrator sign-in required.'},403);
   let input:Record<string,unknown>;try{input=await readInput(request);}catch{return reply({error:'Invalid request.'},400);}
+  if(input.action==='support_reply'||input.action==='support_resolve'){
+   if(typeof input.ticket_id!=='string'||!isUuid(input.ticket_id))return reply({error:'Invalid ticket.'},400);
+   const sending=input.action==='support_reply';
+   if(sending&&(typeof input.text!=='string'||!input.text.trim()||input.text.length>1500||typeof input.request_id!=='string'||!isUuid(input.request_id)))return reply({error:'Enter a reply up to 1500 characters.'},400);
+   const result=await auth.db.rpc('support_admin_action',{p_admin:auth.user.id,p_ticket:input.ticket_id,p_action:sending?'reply':'resolve',p_text:sending?String(input.text).trim():null,p_request:sending?input.request_id:null});if(result.error)throw result.error;if(result.data!==true)return reply({error:'Ticket not found.'},404);
+   if(sending)after(async()=>{try{await dispatchSupportReplies(5);}catch{console.error('support_reply_delivery_pending');}});
+   return reply({saved:true,queued:sending});
+  }
   if(input.action==='review_id'){
    if(typeof input.document_id!=='string'||!isUuid(input.document_id)||typeof input.approve!=='boolean')return reply({error:'Invalid review.'},400);
    const reason=typeof input.reason==='string'?input.reason:null;

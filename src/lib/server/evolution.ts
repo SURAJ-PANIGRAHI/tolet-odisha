@@ -85,3 +85,20 @@ export async function readJsonLimited(request: Request, limit: number): Promise<
   } finally { reader.releaseLock(); }
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
+
+export interface SupportMessage{phone:string;messageId:string;text:string;sentAt:string;}
+// Separate parser: existing verification messages never enter the support engine.
+export function parseSupportMessages(payload:unknown,expectedInstance:string):SupportMessage[]{
+ const root=object(payload);if(!root||root.instance!==expectedInstance||typeof root.event!=='string'||root.event.toLowerCase().replaceAll('_','.')!=='messages.upsert')return [];
+ const data=Array.isArray(root.data)?root.data:[root.data];if(data.length>100)throw new Error('Too many messages');
+ const result:SupportMessage[]=[];
+ for(const entry of data){
+  const item=object(entry),key=object(item?.key);if(!item||!key||key.fromMe!==false||typeof key.id!=='string'||key.id.length<1||key.id.length>200)continue;
+  if(typeof key.remoteJid!=='string'||!/@(s\.whatsapp\.net|c\.us|lid)$/.test(key.remoteJid))continue;
+  const phones=[...new Set([key.remoteJid,key.remoteJidAlt,key.senderPn,item.senderPn].map(phoneFromJid).filter((value):value is string=>!!value))];if(phones.length!==1)continue;
+  const text=messageText(item.message)?.trim();if(!text||text.length>1500||/^VERIFY_/i.test(text)||/^\d{4,8}$/.test(text)||/(otp|passcode|verification code)[^0-9]{0,20}\d{4,8}|password\s*[:=]/i.test(text))continue;
+  const stamp=Number(item.messageTimestamp);if(!Number.isFinite(stamp)||stamp*1000<Date.now()-900000||stamp*1000>Date.now()+300000)continue;
+  result.push({phone:phones[0],messageId:key.id,text,sentAt:new Date(stamp*1000).toISOString()});
+ }
+ return result;
+}

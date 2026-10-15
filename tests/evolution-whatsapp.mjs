@@ -38,7 +38,7 @@ await assert.rejects(utils.readJsonLimited(jsonRequest({large:'x'.repeat(100)}),
 let calls=[],dbError=false;
 const db={rpc:async(name,args)=>{calls.push({name,args});return {data:'verified',error:dbError?{message:'failure'}:null};}};
 process.env.EVOLUTION_INSTANCE_NAME='tolet';process.env.EVOLUTION_WEBHOOK_SECRET=secret;
-const webhook=load('src/app/api/webhooks/whatsapp/route.ts',{'@/lib/server/evolution':utils,'@/lib/server/lifecycle':{serverDb:()=>db}});
+const webhook=load('src/app/api/webhooks/whatsapp/route.ts',{'next/server':{after:()=>{}},'@/lib/server/support':{dispatchSupportReplies:async()=>{}},'@/lib/server/evolution':utils,'@/lib/server/lifecycle':{serverDb:()=>db}});
 assert.equal((await webhook.POST(jsonRequest(event()))).status,401);assert.equal(calls.length,0);
 assert.equal((await webhook.POST(jsonRequest(event(),{'x-evolution-webhook-secret':secret}))).status,200);
 assert.equal(calls[0].args.p_sender,'+919876543210');assert.equal(calls[0].name,'account_accept_whatsapp_verification');
