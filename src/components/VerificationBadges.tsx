@@ -7,7 +7,7 @@ export function ListingVerificationStamp({ listing }: { listing: Listing }) {
     listing.phone_verified ? "WhatsApp verified" : null,
     listing.email_verified ? "Email verified" : null,
   ].filter((value): value is string => value !== null);
-  if (!checks.length) return null;
+  if (!checks.length) return <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm"><ShieldCheck aria-hidden="true" className="h-4 w-4"/>Not verified</span>;
   return <span
     title={`${checks.join(" · ")}. Verification does not confirm property ownership.`}
     className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/80 bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-md"
@@ -15,8 +15,8 @@ export function ListingVerificationStamp({ listing }: { listing: Listing }) {
 }
 export function VerificationBadges({ listing }: { listing: Listing }) {
   const flags = [
-    ["Email", !!listing.email_verified, "Confirmed ✓", "Not confirmed"],
-    ["WhatsApp", !!listing.phone_verified, "Confirmed ✓", "Not confirmed"],
+    ["Email", !!listing.email_verified, "Confirmed ✓", "Not verified"],
+    ["WhatsApp", !!listing.phone_verified, "Confirmed ✓", "Not verified"],
     ["Govt ID", !!listing.id_verified, "Verified ✓", "Not verified"],
   ] as const;
   return (

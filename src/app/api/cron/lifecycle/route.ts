@@ -1,3 +1,4 @@
+import { cleanupAccountIds } from '@/lib/server/account-id';
 import { dispatchPortalEmails } from '@/lib/server/portal-email';
 import { dispatchEmails, serverDb } from '@/lib/server/lifecycle';
 import { timingSafeEqual } from 'node:crypto';
@@ -13,7 +14,8 @@ export async function GET(request: Request) {
     if (error) throw error;
     const cleanup = await serverDb().rpc('account_prune_phone_verification');
     if (cleanup.error) throw cleanup.error;
-    const legacy = await dispatchEmails(5);
+    const idCleanup = await cleanupAccountIds(serverDb(), 5);
+    const legacy = {...await dispatchEmails(5),idCleanup};
     if (process.env.NEXT_PUBLIC_PORTAL_V2_ENABLED !== 'true') return Response.json(legacy);
     const maintenance = await serverDb().rpc('portal_daily_maintenance');
     if (maintenance.error) throw maintenance.error;

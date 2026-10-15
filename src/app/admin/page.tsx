@@ -1,133 +1,34 @@
+/* eslint-disable @next/next/no-img-element -- Private authenticated blob images must not use the image optimiser. */
 'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { createClient, type Session } from '@supabase/supabase-js';
-import type { Listing } from '@/lib/supabase';
-
-type ReviewListing = Listing & { moderation_status: 'pending' | 'approved' | 'rejected' };
-
-// Keep the admin token separate from the public listing submission client.
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  { auth: { storageKey: 'tolet-admin', persistSession: false, detectSessionInUrl: false } },
-);
-
-export default function AdminPage() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(false);
-  const [authorized, setAuthorized] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [reports, setReports] = useState<{ id: string; listing_id: string; reason: string; description: string | null; created_at: string }[]>([]);
-  const [rows, setRows] = useState<ReviewListing[]>([]);
-  const [filter, setFilter] = useState('approved');
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    const { data } = admin.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
-      setRows([]);
-      setReports([]);
-      setAuthorized(false);
-      setReady(true);
-    });
-    return () => { data.subscription.unsubscribe(); };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!session) return;
-    async function load() {
-      setBusy(true);
-      setMessage('');
-      try {
-        const membership = await admin.from('admin_users').select('user_id').eq('user_id', session!.user.id).maybeSingle();
-        if (membership.error) throw membership.error;
-        if (!membership.data) throw new Error('This account has no administrator access.');
-        const result = await admin.from('listings').select('*').eq('moderation_status', filter).order('created_at', { ascending: false }).limit(100);
-        if (result.error) throw result.error;
-        if (!cancelled) { setAuthorized(true); setRows(result.data || []); }
-        const reportResult = await admin.from('reports').select('id, listing_id, reason, description, created_at').order('created_at', { ascending: false }).limit(100);
-        if (reportResult.error) throw new Error('Listing queue loaded, but reports could not be loaded. Check the reports migration.');
-        if (!cancelled) setReports(reportResult.data || []);
-      } catch (error) {
-        if (!cancelled) setMessage(error instanceof Error ? error.message : 'Unable to load the review queue.');
-      } finally { if (!cancelled) setBusy(false); }
-    }
-    void load();
-    return () => { cancelled = true; };
-  }, [session, filter]);
-
-  async function login(event: React.FormEvent) {
-    event.preventDefault(); setBusy(true); setMessage('');
-    try {
-      const { error } = await admin.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      setPassword('');
-    } catch { setMessage('Sign-in failed. Check your administrator credentials.'); }
-    finally { setBusy(false); }
-  }
-
-  async function moderate(row: ReviewListing, status: ReviewListing['moderation_status']) {
-    setBusy(true); setMessage('');
-    try {
-      const { data, error } = await admin.from('listings')
-        .update({ moderation_status: status, is_active: status === 'approved' })
-        .eq('id', row.id).eq('moderation_status', row.moderation_status).select('id');
-      if (error) throw error;
-      if (data?.length !== 1) throw new Error('Listing changed or permission was revoked. Reload the queue.');
-      setRows(previous => previous.filter(item => item.id !== row.id));
-      setMessage(`Listing ${status}.`);
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Action failed.'); }
-    finally { setBusy(false); }
-  }
-
-  const button = 'rounded-lg bg-[#005B94] px-4 py-2 text-white disabled:opacity-50';
-  return <main className="mx-auto max-w-4xl p-6 space-y-5">
-    <h1 className="text-2xl font-bold">ToLet Odisha — Report moderation</h1>
-    <Link href="/" className="text-[#005B94] underline">Back to listings</Link>
-    {message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message}</p>}
-    {!ready ? <p>Loading…</p> : !session ? <form onSubmit={login} className="max-w-sm space-y-4">
-      <label className="block">Administrator email<input className="block w-full rounded border p-2" type="email" autoComplete="username" required value={email} onChange={event => setEmail(event.target.value)} /></label>
-      <label className="block">Password<input className="block w-full rounded border p-2" type="password" autoComplete="current-password" required value={password} onChange={event => setPassword(event.target.value)} /></label>
-      <button className={button} disabled={busy}>Sign in</button>
-    </form> : <>
-      <div className="flex flex-wrap gap-4 items-center">
-        <button className={button} onClick={() => void admin.auth.signOut()}>Sign out</button>
-        <label>Queue <select className="rounded border p-2" value={filter} onChange={event => setFilter(event.target.value)}>
-          <option value="pending">Pending</option><option value="approved">Published</option><option value="rejected">Rejected</option>
-        </select></label>
-      </div>
-      {busy && <p role="status">Working…</p>}
-      {authorized && !busy && rows.length === 0 && <p>No listings in this queue.</p>}
-      {authorized && <p className="text-sm text-slate-600">Showing up to 100 listings in this category. Review reported listings below.</p>}
-      {authorized && <section className="rounded-xl border border-amber-200 p-4 space-y-3">
-        <h2 className="text-lg font-bold">Latest reports</h2>
-        <p className="text-sm text-slate-600">Latest 100 reports. Match the listing ID below with a listing in the review queue.</p>
-        {reports.map(report => <article key={report.id} className="border-t pt-3 text-sm">
-          <p className="font-semibold">{report.reason.replaceAll('_', ' ')} · {new Date(report.created_at).toLocaleString()}</p>
-          <p className="break-all">Listing ID: {report.listing_id}</p><p className="whitespace-pre-wrap">{report.description}</p>
-        </article>)}
-      </section>}
-      {rows.map(row => <article key={row.id} className="rounded-xl border p-4 space-y-3">
-        <h2 className="text-lg font-bold">{row.title}</h2><p className="text-xs text-slate-500 break-all">Listing ID: {row.id}</p>
-        <p>{row.district} · {row.locality} · {row.category} · ₹{row.rent_monthly}/month</p>
-        <p>{row.description}</p><p>{row.contact_name} · {row.contact_phone} · {row.landmark}</p>
-        <div className="flex flex-wrap gap-2">{(row.images || []).map((url, index) => {
-          const prefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-images/`;
-          return url.startsWith(prefix) ? <a key={index} href={url} target="_blank" rel="noopener noreferrer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt={`Property photo ${index + 1}`} className="h-28 w-36 rounded object-cover" />
-          </a> : <span key={index}>External photo omitted</span>;
-        })}</div>
-        <div className="flex gap-3">
-          {row.moderation_status !== 'approved' && <button className={button} disabled={busy} onClick={() => void moderate(row, 'approved')}>Approve</button>}
-          {row.moderation_status !== 'rejected' && <button className="rounded-lg border border-red-600 px-4 py-2 text-red-700 disabled:opacity-50" disabled={busy} onClick={() => void moderate(row, 'rejected')}>Reject / Unpublish</button>}
-        </div>
-      </article>)}
-    </>}
-  </main>;
+import {useCallback,useEffect,useState} from 'react';
+import {createClient,type Session} from '@supabase/supabase-js';
+import {ID_TYPES,ID_REJECTION_REASONS,type IdRecord} from '@/lib/id-verification';
+import type {Listing} from '@/lib/supabase';
+const admin=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL||'',process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||'',{auth:{storageKey:'tolet-admin',persistSession:false,detectSessionInUrl:false}});
+type Report={id:string;listing_id:string;reason:string;description:string|null;resolved_at:string|null};
+type Queue={documents:IdRecord[];stats:Record<string,number>;reports:Report[];listings:(Listing&{moderation_status:string})[]};
+const button='rounded-xl bg-[#005B94] px-5 py-3 text-sm font-semibold text-white disabled:opacity-40';
+const date=(value:string|null)=>value?new Date(value).toLocaleString('en-IN'):'—';
+export default function AdminPage(){
+ const [session,setSession]=useState<Session|null>(null),[ready,setReady]=useState(false),[queue,setQueue]=useState<Queue|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState('');
+ const [tab,setTab]=useState('ids'),[filter,setFilter]=useState('pending'),[search,setSearch]=useState(''),[selected,setSelected]=useState<string|null>(null),[image,setImage]=useState(''),[rotation,setRotation]=useState(0),[reason,setReason]=useState<string>(ID_REJECTION_REASONS[0]);
+ useEffect(()=>{const {data}=admin.auth.onAuthStateChange((_event,next)=>{setSession(next);setQueue(null);setSelected(null);setImage('');setReady(true);});return()=>data.subscription.unsubscribe();},[]);
+ const request=useCallback(async(path='',body?:unknown)=>{const {data}=await admin.auth.getSession();if(!data.session)throw new Error('Please sign in again.');const response=await fetch(`/api/admin${path}`,{method:body?'POST':'GET',headers:{Authorization:`Bearer ${data.session.access_token}`,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store'});if(!response.ok){const result=await response.json();throw new Error(result.error||'Request failed.');}return response;},[]);
+ const load=useCallback(async()=>{setBusy(true);try{const response=await request();setQueue(await response.json());}catch(error){setMessage(error instanceof Error?error.message:'Unable to load.');}finally{setBusy(false);}},[request]);
+ useEffect(()=>{if(!session)return;let cancelled=false;void request().then(response=>response.json()).then(data=>{if(!cancelled)setQueue(data);}).catch(error=>{if(!cancelled){setQueue(null);setSelected(null);setMessage(error.message);}});return()=>{cancelled=true;};},[session,request]);
+ useEffect(()=>{if(!selected||!session||!queue?.documents.find(doc=>doc.id===selected)?.has_file)return;let cancelled=false,url='';void request(`?document=${selected}`).then(response=>response.blob()).then(blob=>{if(!cancelled){url=URL.createObjectURL(blob);setImage(url);}}).catch(error=>{if(!cancelled){setQueue(null);setSelected(null);setMessage(error.message);}});return()=>{cancelled=true;if(url)URL.revokeObjectURL(url);};},[selected,session,request,queue]);
+ async function login(event:React.FormEvent){event.preventDefault();setBusy(true);setMessage('');const {error}=await admin.auth.signInWithPassword({email,password});setPassword('');if(error)setMessage('Check your administrator email and password.');setBusy(false);}
+ async function act(body:unknown){setBusy(true);setMessage('');try{await request('',body);setSelected(null);setMessage('Review saved.');await load();}catch(error){setMessage(error instanceof Error?error.message:'Review failed.');}finally{setBusy(false);}}
+ const documents=queue?.documents||[],current=documents.find(item=>item.id===selected),visible=documents.filter(item=>(filter==='all'||item.status===filter)&&`${item.account_name} ${ID_TYPES[item.document_type]}`.toLowerCase().includes(search.toLowerCase()));
+ const openReports=queue?.reports.filter(item=>!item.resolved_at)||[];
+ return <main className="min-h-screen bg-slate-50 text-slate-900"><header className="border-b bg-white px-6 py-5"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4"><div><Link href="/" className="font-bold text-[#005B94]">ToLet Odisha</Link><p className="text-xs tracking-widest text-slate-500">ADMIN WORKSPACE</p></div><div className="flex items-center gap-4"><Link href="/" className="text-sm text-slate-600">View website ↗</Link>{session&&<button className="rounded-xl border px-4 py-2 text-sm" onClick={()=>void admin.auth.signOut()}>Sign out</button>}</div></div></header>
+ <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6"><h1 className="text-3xl font-bold">Review centre</h1><p className="mt-2 text-slate-500">Review identities. Resolve reports. Keep the community informed.</p>{message&&<p role="status" className="my-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm">{message}</p>}
+ {!ready?<p className="mt-8">Loading…</p>:!session?<form onSubmit={login} className="mx-auto mt-12 max-w-md space-y-5 rounded-3xl border bg-white p-8 shadow-sm"><h2 className="text-xl font-bold">Administrator sign-in</h2><p className="text-sm text-slate-500">Use your existing administrator account.</p><label className="block text-sm font-medium">Email<input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} className="mt-2 w-full rounded-xl border p-3"/></label><label className="block text-sm font-medium">Password<input required type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} className="mt-2 w-full rounded-xl border p-3"/></label><button disabled={busy} className={`${button} w-full`}>{busy?'Signing in…':'Open workspace'}</button></form>:<>
+ <section className="my-8 grid grid-cols-2 gap-4 lg:grid-cols-4">{[['Pending IDs',queue?.stats.pending||0],['Waiting over 48 hours',queue?.stats.overdue||0],['Approved IDs',queue?.stats.approved||0],['Open reports',openReports.length]].map(([label,value])=><div key={label} className="rounded-2xl border bg-white p-5"><p className="text-sm text-slate-500">{label}</p><p className="mt-3 text-3xl font-bold text-[#005B94]">{queue?value:'—'}</p></div>)}</section>
+ <nav aria-label="Review queues" className="mb-6 flex flex-wrap items-center gap-2">{[['ids','Identity reviews'],['reports','Reported listings'],['listings','All listings']].map(([key,label])=><button key={key} onClick={()=>setTab(key)} aria-pressed={tab===key} className={`rounded-xl px-5 py-3 text-sm font-semibold ${tab===key?'bg-[#005B94] text-white':'border bg-white text-slate-600'}`}>{label}</button>)}<button disabled={busy} onClick={()=>void load()} className="ml-auto rounded-xl border bg-white px-4 py-3 text-sm">{busy?'Working…':'↻ Refresh'}</button></nav>
+ {queue&&tab==='ids'&&<><div className="mb-4 flex flex-wrap gap-3"><input aria-label="Search identity reviews" placeholder="Search name or document type" value={search} onChange={e=>setSearch(e.target.value)} className="min-w-60 flex-1 rounded-xl border bg-white p-3"/><select aria-label="Review status" value={filter} onChange={e=>setFilter(e.target.value)} className="rounded-xl border bg-white p-3">{['pending','approved','rejected','all'].map(value=><option key={value} value={value}>{value==='all'?'All statuses':value[0].toUpperCase()+value.slice(1)}</option>)}</select></div><div className="grid items-start gap-5 lg:grid-cols-[340px_1fr]"><section className="overflow-hidden rounded-2xl border bg-white"><div className="border-b p-5 font-semibold">Identity queue <span className="ml-2 text-slate-400">{visible.length}</span></div>{!visible.length&&<p className="p-8 text-sm text-slate-500">No documents in this queue.</p>}{visible.map(doc=><button key={doc.id} onClick={()=>{setImage('');setRotation(0);setSelected(doc.id);}} className={`block w-full border-b p-5 text-left ${selected===doc.id?'bg-blue-50':'hover:bg-slate-50'}`}><span className="block font-semibold">{doc.account_name}</span><span className="mt-1 block text-sm text-slate-500">{ID_TYPES[doc.document_type]}</span><span className="mt-3 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs capitalize">{doc.status}</span><span className="mt-2 block text-xs text-slate-400">{date(doc.submitted_at)}</span></button>)}</section><section className="rounded-2xl border bg-white p-6">{!current?<div className="py-24 text-center"><p className="text-lg font-semibold">Select an ID to review</p><p className="mt-2 text-sm text-slate-500">Private documents are visible only to authorised administrators.</p></div>:<><div className="flex flex-wrap justify-between gap-3"><div><h2 className="text-xl font-bold">{current.account_name}</h2><p className="mt-1 text-sm text-slate-500">{ID_TYPES[current.document_type]} · Submitted {date(current.submitted_at)}</p></div><span className="h-fit rounded-full bg-blue-50 px-3 py-1 text-sm capitalize text-[#005B94]">{current.status}</span></div><div className="mt-6 grid gap-6 xl:grid-cols-[1fr_230px]"><div><div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase text-slate-500">Private document</p><button onClick={()=>setRotation(value=>value+90)} className="rounded-lg border px-3 py-2 text-xs">Rotate ↻</button></div><div className="mt-3 flex min-h-80 items-center justify-center overflow-auto rounded-xl bg-slate-100 p-4">{!current.has_file?<p className="text-sm text-slate-500">Document image has been deleted.</p>:image?<img src={image} alt="Submitted government identity document" style={{transform:`rotate(${rotation}deg)`}} className="max-h-[550px] max-w-full object-contain"/>:<p role="status" className="text-sm">Loading private document…</p>}</div></div><aside className="space-y-5"><div className="rounded-xl bg-slate-50 p-4"><h3 className="font-semibold">Review checklist</h3><ul className="mt-3 list-disc space-y-2 pl-4 text-sm text-slate-600"><li>Accepted document type</li><li>Name matches {current.account_name}</li><li>Photo and details are readable</li><li>Aadhaar first eight digits are masked</li></ul></div><p className="text-xs text-slate-500">Identity review does not verify property ownership. Complete reviews within 48 hours.</p>{current.status==='pending'?<><button disabled={busy||!image} className={`${button} w-full`} onClick={()=>{if(window.confirm(`Approve identity for ${current.account_name}?`))void act({action:'review_id',document_id:current.id,approve:true});}}>Approve identity</button><label className="block text-sm font-medium">Rejection reason<select value={reason} onChange={e=>setReason(e.target.value)} className="mt-2 w-full rounded-xl border p-3">{ID_REJECTION_REASONS.map(value=><option key={value}>{value}</option>)}</select></label><button disabled={busy||!image} className="w-full rounded-xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-700 disabled:opacity-40" onClick={()=>{if(window.confirm('Reject this document and remove its image?'))void act({action:'review_id',document_id:current.id,approve:false,reason});}}>Reject document</button></>:<p className="text-sm">Reviewed {date(current.reviewed_at)}{current.rejection_reason&&` · ${current.rejection_reason}`}</p>}</aside></div></>}</section></div></>}
+ {queue&&tab!=='ids'&&<section className="space-y-4">{(tab==='reports'?queue.listings.filter(row=>openReports.some(report=>report.listing_id===row.id)):queue.listings).map(row=><article key={row.id} className="rounded-2xl border bg-white p-6"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="text-lg font-bold">{row.title}</h2><p className="mt-1 text-sm text-slate-500">{row.locality}, {row.district} · ₹{row.rent_monthly.toLocaleString('en-IN')}/month</p></div><span className="text-sm text-slate-500">{row.is_active?'Active':'Inactive'} · {row.moderation_status}</span></div><p className="my-4 text-sm">{row.description}</p>{openReports.filter(report=>report.listing_id===row.id).map(report=><div key={report.id} className="my-2 rounded-xl bg-amber-50 p-4 text-sm"><strong>{report.reason.replaceAll('_',' ')}</strong><p>{report.description}</p></div>)}<div className="mt-5 flex flex-wrap gap-3"><button disabled={busy} className={button} onClick={()=>{if(window.confirm('Clear reports and restore this listing if it is still eligible?'))void act({action:'moderate',listing_id:row.id,approve:true});}}>Clear reports / Keep listing</button><button disabled={busy} className="rounded-xl border border-red-200 px-5 py-3 text-sm text-red-700" onClick={()=>{if(window.confirm('Unpublish this listing?'))void act({action:'moderate',listing_id:row.id,approve:false});}}>Unpublish</button></div></article>)}{tab==='reports'&&!openReports.length&&<p className="rounded-2xl border bg-white p-12 text-center text-slate-500">No open reports. You are all caught up.</p>}</section>}
+ {queue&&<p className="mt-6 text-xs text-slate-400">Latest 200 records per queue. Documents are private and are never included in public listing photos.</p>}
+ </> }</div></main>;
 }
