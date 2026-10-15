@@ -1,150 +1,35 @@
 'use client';
-import { ListingVerificationStamp, VerificationBadges } from './VerificationBadges';
-
-import React from 'react';
-import { Listing } from '@/lib/supabase';
-import { MapPin, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
-
-interface ListingCardProps {
-  listing: Listing;
-  isOdia: boolean;
-  onSelect: (listing: Listing) => void;
+import type {Listing} from '@/lib/supabase';
+import {MapPin,Phone,ArrowUpRight,House,Check,ShieldCheck} from 'lucide-react';
+import {WhatsAppIcon} from './BrandIcons';
+import {ListingVerificationStamp} from './VerificationBadges';
+interface ListingCardProps{listing:Listing;isOdia:boolean;onSelect:(listing:Listing)=>void;preview?:boolean;}
+export function ListingCard({listing,isOdia,onSelect,preview=false}:ListingCardProps){
+ const phone=(listing.whatsapp_number||listing.contact_phone).replace(/\D/g,'');
+ const normalized=phone.startsWith('91')&&phone.length===12?phone:'91'+phone;
+ const waUrl=`https://wa.me/${normalized}?text=${encodeURIComponent(`Namaskar! I found your listing "${listing.title}" on ToLetOdisha. Is it still available?`)}`;
+ return <article className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+  <button type="button" onClick={()=>onSelect(listing)} aria-label={`View ${listing.title}`} className="block w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-blue-600">
+   <div className="relative m-3 mb-0 aspect-[16/9] overflow-hidden rounded-xl bg-slate-100">
+    {listing.images?.[0]?<>
+     {/* eslint-disable-next-line @next/next/no-img-element */}
+     <img src={listing.images[0]} alt={listing.title} width={640} height={360} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-200 motion-safe:group-hover:scale-[1.02]"/>
+    </>:<div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-50 to-blue-50 text-slate-500"><House size={36} strokeWidth={1.2}/><span className="text-xs font-medium">{isOdia?'ଫଟୋ ନାହିଁ':'Photos not added yet'}</span></div>}
+    <span className="absolute left-3 top-3 max-w-[85%] truncate rounded-lg bg-white px-3 py-1.5 text-[11px] font-bold text-slate-800 shadow-sm">{listing.commercial_type||listing.category}</span>
+    {listing.is_featured?<span className="absolute bottom-3 left-3 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">Featured</span>:null}
+    {preview?<span className="absolute bottom-3 right-3 rounded-md bg-white/95 px-2 py-1 text-[10px] font-semibold text-slate-600">Sample illustration</span>:null}
+   </div>
+   <div className="p-5 sm:p-6"><div className="flex flex-wrap items-baseline gap-x-2 gap-y-1"><p className="text-[1.7rem] font-extrabold tracking-tight text-slate-900">₹{listing.rent_monthly.toLocaleString('en-IN')}</p><span className="text-sm text-slate-600">/ {isOdia?'ମାସିକ':'month'}</span>{listing.deposit>0?<span className="ml-auto text-[11px] font-medium text-slate-500">{isOdia?'ଅଗ୍ରିମ':'Deposit'} ₹{listing.deposit.toLocaleString('en-IN')}</span>:null}</div>
+    <h3 className="mt-2 line-clamp-1 text-base font-bold tracking-tight text-slate-900 group-hover:text-[#005B94] sm:text-lg">{listing.title}</h3>
+    <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600"><MapPin size={14} className="shrink-0 text-blue-600"/><span className="truncate">{listing.locality}, {listing.district}</span></p>
+    <div className="mt-4 flex min-h-7 flex-wrap items-center gap-2">{listing.id_verified?<span title="Government ID reviewed. This does not verify property ownership." className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-800"><ShieldCheck size={14}/>Verified Profile</span>:<ListingVerificationStamp listing={listing}/>}<span className="text-[11px] text-slate-500">{listing.advertiser_type||'Advertiser'} · {isOdia?'ସ୍ୱଘୋଷିତ':'self-declared'}</span></div>
+    <div className="mt-4 flex min-h-6 flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600">{listing.area_sqft!=null?<span>{listing.area_sqft.toLocaleString('en-IN')} sq ft</span>:null}{listing.amenities?.slice(0,3).map(amenity=><span key={amenity} className="inline-flex items-center gap-1"><Check size={12} className="text-slate-400"/>{amenity}</span>)}</div>
+   </div>
+  </button>
+  <div className="mx-5 mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 py-4 sm:mx-6">
+   {preview?<button type="button" onClick={()=>onSelect(listing)} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-bold text-white"><WhatsAppIcon width={16} height={16}/>WhatsApp preview</button>:<a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-800"><WhatsAppIcon width={16} height={16}/>WhatsApp</a>}
+   {preview?<button onClick={()=>onSelect(listing)} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700"><Phone size={14}/>Call preview</button>:<a href={`tel:${listing.contact_phone}`} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"><Phone size={14}/>{isOdia?'କଲ୍ କରନ୍ତୁ':'Call'}</a>}
+   <button type="button" onClick={()=>onSelect(listing)} aria-label={`View details for ${listing.title}`} className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 text-[#005B94] transition-colors hover:bg-sky-50"><ArrowUpRight size={18}/></button>
+  </div>
+ </article>;
 }
-
-export const ListingCard: React.FC<ListingCardProps> = ({ listing, isOdia, onSelect }) => {
-  const cleanPhone = (listing.whatsapp_number || listing.contact_phone).replace(/\D/g, '');
-  const waUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(
-    `Namaskar! I found your listing "${listing.title}" on ToLetOdisha. Is it still available?`
-  )}`;
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Boys Mess':
-        return 'bg-[#005B94]/10 text-[#005B94] border-[#005B94]/20';
-      case 'Girls Hostel':
-        return 'bg-pink-50 text-pink-700 border-pink-200';
-      case 'Bachelor Room':
-        return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-      case 'Tutor / Tuition':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
-      default:
-        return 'bg-sky-50 text-[#005B94] border-sky-200';
-    }
-  };
-
-  const hasPhotos = listing.images && listing.images.length > 0;
-
-  return (
-    <div className="group bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-[#005B94]/40 transition-all duration-200 overflow-hidden flex flex-col justify-between">
-      
-      {/* Top Media / Header */}
-      <div className="cursor-pointer" onClick={() => onSelect(listing)}>
-        {hasPhotos ? (
-          <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={listing.images[0]}
-              alt={listing.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute top-3 left-3">
-              <span className={`px-2.5 py-1 text-xs font-bold rounded-full border shadow-2xs backdrop-blur-md ${getCategoryColor(listing.category)}`}>
-                {listing.commercial_type || listing.category}
-              </span>
-            </div>
-            <div className="absolute bottom-3 right-3 left-3 flex justify-end">
-              <ListingVerificationStamp listing={listing} />
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 pb-1">
-            <ListingVerificationStamp listing={listing} />
-            <div className="flex items-center justify-between mb-2">
-              <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${getCategoryColor(listing.category)}`}>
-                {listing.commercial_type || listing.category}
-              </span>
-              <span className="text-[11px] text-slate-400 font-medium">
-                {new Date(listing.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Content Body */}
-        <div className="p-4 pt-2">
-          {/* Rent and Deposit */}
-          <div className="flex items-baseline gap-1.5 mb-1.5">
-            <span className="text-xl sm:text-2xl font-black text-slate-900">
-              ₹{listing.rent_monthly.toLocaleString('en-IN')}
-            </span>
-            <span className="text-xs text-slate-500 font-medium">/ {isOdia ? 'ମାସିକ' : 'month'}</span>
-            {listing.deposit > 0 && (
-              <span className="ml-auto text-[11px] text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full font-medium">
-                {isOdia ? 'ଅଗ୍ରିମ' : 'Dep.'}: ₹{listing.deposit.toLocaleString('en-IN')}
-              </span>
-            )}
-          </div>
-
-          {/* Title */}
-          <h3 className="font-bold text-slate-900 text-sm sm:text-base line-clamp-1 group-hover:text-[#005B94] transition">
-            {listing.title}
-          </h3>
-
-          <VerificationBadges listing={listing} />
-          {listing.advertiser_type && <p className="mt-1 text-xs text-slate-600">Listed by: {listing.advertiser_type} <span className="text-slate-400">(self-declared)</span></p>}
-
-          {listing.area_sqft != null && <p className="mt-2 text-sm font-semibold text-slate-700">{listing.area_sqft.toLocaleString('en-IN')} sq ft</p>}
-
-          {/* Location */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-2">
-            <MapPin className="w-3.5 h-3.5 text-[#005B94] shrink-0" />
-            <span className="font-semibold text-slate-800">{listing.locality}</span>
-            <span className="text-slate-400">•</span>
-            <span className="text-slate-500 truncate">{listing.district}</span>
-          </div>
-
-          {/* Amenities Chips */}
-          {listing.amenities && listing.amenities.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {listing.amenities.slice(0, 3).map((amenity, i) => (
-                <span key={i} className="inline-flex items-center gap-1 text-[11px] bg-slate-50 text-slate-700 px-2 py-0.5 rounded-md border border-slate-100 font-medium">
-                  <CheckCircle2 className="w-3 h-3 text-[#005B94]" />
-                  {amenity}
-                </span>
-              ))}
-              {listing.amenities.length > 3 && (
-                <span className="text-[10px] text-slate-400 self-center font-medium">
-                  +{listing.amenities.length - 3} more
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Footer Contact CTAs */}
-      <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
-        {/* WhatsApp Button */}
-        <a
-          href={waUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white text-xs font-bold shadow-xs transition cursor-pointer"
-        >
-          <MessageSquare className="w-3.5 h-3.5" />
-          <span>WhatsApp</span>
-        </a>
-
-        {/* Call Button - KLM Royal Blue */}
-        <a
-          href={`tel:${listing.contact_phone}`}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-[#005B94] text-xs font-bold transition active:scale-95 cursor-pointer"
-        >
-          <Phone className="w-3.5 h-3.5 text-[#005B94]" />
-          <span>{isOdia ? 'କଲ୍ କରନ୍ତୁ' : 'Call'}</span>
-        </a>
-      </div>
-
-    </div>
-  );
-};

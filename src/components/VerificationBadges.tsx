@@ -7,10 +7,10 @@ export function ListingVerificationStamp({ listing }: { listing: Listing }) {
     listing.phone_verified ? "WhatsApp verified" : null,
     listing.email_verified ? "Email verified" : null,
   ].filter((value): value is string => value !== null);
-  if (!checks.length) return <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm"><ShieldCheck aria-hidden="true" className="h-4 w-4"/>Not verified</span>;
+  if (!checks.length) return <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-100 bg-stone-100 px-3 py-1.5 text-xs font-bold text-stone-700"><ShieldCheck aria-hidden="true" className="h-4 w-4"/>Not verified</span>;
   return <span
     title={`${checks.join(" · ")}. Verification does not confirm property ownership.`}
-    className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/80 bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-md"
+    className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800"
   ><ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0" />{checks[0]}</span>;
 }
 export function VerificationBadges({ listing }: { listing: Listing }) {

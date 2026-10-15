@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
       { key: 'X-Frame-Options', value: 'DENY' },
       { key: 'Referrer-Policy', value: 'no-referrer' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-    ] }];
+    ] },{source:'/preview/landing',headers:[{key:'X-Frame-Options',value:'SAMEORIGIN'}]}];
   },
   allowedDevOrigins: ["192.168.29.199", "localhost:3000"],
   turbopack: {
