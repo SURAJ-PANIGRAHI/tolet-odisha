@@ -13,8 +13,8 @@ export async function POST(request:Request){
   const body=Buffer.concat(parts).toString('utf8');
   if(!validAuthHook(body,request.headers,process.env.SUPABASE_SMS_HOOK_SECRET||''))return reply({error:{message:'Invalid signature.'}},401);
   const payload=JSON.parse(body),user=payload.user,otp=payload.sms?.otp;
-  // Auth supplies the destination phone for both sign-up and phone changes.
-  const raw=String(payload.sms?.phone||user?.phone||'').replace(/^\+/,'');const phone='+'+raw;
+  // Require Auth's explicit OTP destination. The account phone can differ during a phone change.
+  const raw=String(payload.sms?.phone||'').replace(/^\+/,'');const phone='+'+raw;
   if(!/^91[6-9][0-9]{9}$/.test(raw)||typeof otp!=='string'||!/^\d{6,10}$/.test(otp)||typeof user?.id!=='string')return reply({error:{message:'Invalid authentication message.'}},400);
   const db=serverDb();
   const allowed=await db.rpc('account_allow_otp_delivery',{p_actor:user.id,p_phone:phone});

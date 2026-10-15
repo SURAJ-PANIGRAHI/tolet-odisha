@@ -18,7 +18,8 @@ Email and Google continue to work. New WhatsApp accounts have no email; they can
 3. Enable the Phone provider and phone sign-ups in Supabase. **Require OTP confirmation; do not enable automatic phone confirmation.** Keep email/Google providers enabled. The Send SMS hook replaces provider delivery; no Twilio/MSG91 credentials are used by this integration. If the dashboard demands an SMS-provider configuration, do not invent credentials: review its current hook/provider setup.
 4. Set OTP expiry to 5 minutes, length to 6, resend interval to at least 60 seconds. Keep Auth rate limits and production abuse controls enabled. Application delivery adds 10 requests per destination per hour and 200 globally per hour; adjust deliberately as usage grows.
 5. Redeploy after adding environment variables. The UI capability endpoint exposes only readiness booleans, never credentials.
-6. Test with a separate personal WhatsApp number, not the connected business sender:
+6. The Auth hook payload must include `sms.phone`, the actual OTP destination. The hook deliberately rejects payloads without it rather than guessing from the account phone during a phone change. If your hosted Auth version omits it, stop activation and check current Supabase support/version; do not bypass this check.
+7. Test with a separate personal WhatsApp number, not the connected business sender:
    - Sign out, request OTP, enter a wrong/expired code (must fail), then a valid code (must create a session).
    - Post with the same contact number. WhatsApp verified; email not verified. Confirm it appears in the same dashboard after signing out/in.
    - Add an email. Confirm the email stays unverified until its confirmation link is used. Both badges should then remain verified.
