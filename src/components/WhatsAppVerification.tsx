@@ -54,7 +54,7 @@ export function WhatsAppVerification() {
   }
   return <section className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
     <h2 className="text-xl font-bold">WhatsApp phone verification</h2>
-    <p className="text-slate-600">Send a verification message from your own WhatsApp number. Verification adds trust to your profile. It confirms control of your number, not property ownership. Only listings with the same contact number receive the WhatsApp badge.</p>
+    <p className="text-slate-600">Send a verification message from your own WhatsApp number. Verification adds trust to your profile.</p>
     {status?.verified && !changing ? <div><p role="status" className="font-semibold text-green-700">WhatsApp confirmed ✓ {status.phone_number}</p><button type="button" onClick={() => setChanging(true)} className="mt-3 text-sm underline">Change verified number</button></div> : <>
       <label className="block font-medium" htmlFor="verification-phone">Your Indian mobile number</label>
       <input id="verification-phone" type="tel" autoComplete="tel" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} disabled={busy || !!challenge} placeholder="9876543210" className="w-full rounded-lg border border-slate-300 p-3" />
