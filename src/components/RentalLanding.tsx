@@ -167,7 +167,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
       <main id="rental-results" className="scroll-mt-24 max-w-6xl mx-auto px-4 sm:px-6 mt-3">
 
         {/* Category Pills Bar */}
-        <div className="flex items-center gap-1 overflow-x-auto rounded-2xl bg-slate-50 p-1.5">
+        <div className="category-strip flex items-center gap-1 overflow-x-auto rounded-2xl bg-slate-50 p-1.5">
           {CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
@@ -288,13 +288,13 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
                   onSelect={(item) => setSelectedListing(item)}
                 />
                 {/* Insert Sponsor Banner after the 2nd listing */}
-                {index === 1 && (
+                {!preview && index === 1 && (
                   <div className="col-span-full"><SponsorBanner district={selectedDistrict} isOdia={isOdia} /></div>
                 )}
               </React.Fragment>
             ))}
             {/* If fewer than 2 listings, show sponsor banner at the end */}
-            {filteredListings.length < 2 && (
+            {!preview && filteredListings.length < 2 && (
               <div className="col-span-full"><SponsorBanner district={selectedDistrict} isOdia={isOdia} /></div>
             )}
           </div>
