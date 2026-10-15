@@ -67,7 +67,7 @@ export default function Home() {
           if (!response.ok) throw new Error('Portal feed unavailable');
           combined = [...combined, ...portal.listings];
         }
-        if (!cancelled) setListings(combined);
+        if (!cancelled) {setListings(combined);const requested=new URLSearchParams(window.location.search).get('listing');if(requested)setSelectedListing(combined.find(item=>item.id===requested)||null);}
       } catch {
         if (!cancelled) setFetchError(true);
       } finally {

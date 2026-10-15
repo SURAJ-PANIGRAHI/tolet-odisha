@@ -1,4 +1,5 @@
 import 'server-only';
+import {sendWhatsApp,whatsappDeliveryReady} from './whatsapp-delivery';
 import { createClient } from '@supabase/supabase-js';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
@@ -49,7 +50,8 @@ type Job = { id: string; kind: string; recipient: string; listing_id: string; cy
 
 // Durable jobs are claimed under a database lease. Failed sends remain retryable.
 export async function dispatchEmails(limit = 20, listingId: string | null = null) {
-  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM || !process.env.RENEWAL_SIGNING_SECRET || !process.env.APP_URL) return { sent: 0, failed: 0, configured: false };
+  const emailReady=!!(process.env.RESEND_API_KEY&&process.env.EMAIL_FROM);
+  if (!emailReady&&!whatsappDeliveryReady()) return { sent: 0, failed: 0, configured: false };
   const db = serverDb();
   const { data, error } = await db.rpc('claim_notification_jobs', { p_limit: limit, p_listing: listingId });
   if (error) throw error;
@@ -57,6 +59,15 @@ export async function dispatchEmails(limit = 20, listingId: string | null = null
   for (const job of (data || []) as Job[]) {
     try {
       let body = job.body;
+      if(job.kind==='published_email'||job.kind==='published_whatsapp'){
+        const {data:listing,error:listingError}=await db.from('listings').select('is_active,moderation_status,expires_at').eq('id',job.listing_id).maybeSingle();
+        if(listingError)throw listingError;
+        if(!listing||!listing.is_active||listing.moderation_status!=='approved'||Date.parse(listing.expires_at)<=Date.now()){
+          const {error:cancelError}=await db.from('notification_jobs').update({sent_at:new Date().toISOString(),last_error:'Listing no longer live'}).eq('id',job.id);
+          if(cancelError)throw cancelError;
+          continue;
+        }
+      }
       if (job.kind === 'verify' || job.kind === 'renewal') {
         const { data: owner, error: ownerError } = await db.from('listing_owner_contacts').select('listing_id').eq('listing_id', job.listing_id).eq('cycle', job.cycle!).maybeSingle();
         if (ownerError) throw ownerError;
@@ -69,6 +80,10 @@ export async function dispatchEmails(limit = 20, listingId: string | null = null
         link.searchParams.set('token', renewalToken(job.listing_id, job.cycle!));
         body += `\n\n${link.toString()}\n\nOpen the link and confirm your choice. If you do nothing, the listing will expire.`;
       }
+      if(job.kind==='published_whatsapp'){
+        await sendWhatsApp(job.recipient,job.body);
+      }else{
+      if(!emailReady)throw new Error('Email delivery unavailable');
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json', 'Idempotency-Key': `tolet-${job.id}` },
@@ -76,6 +91,7 @@ export async function dispatchEmails(limit = 20, listingId: string | null = null
         signal: AbortSignal.timeout(10000),
       });
       if (!response.ok) throw new Error(`Email provider status ${response.status}`);
+      }
       const { error: markError } = await db.from('notification_jobs').update({ sent_at: new Date().toISOString(), last_error: null }).eq('id', job.id);
       if (markError) throw markError;
       sent++;

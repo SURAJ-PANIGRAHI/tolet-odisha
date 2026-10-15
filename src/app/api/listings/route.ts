@@ -1,4 +1,5 @@
-import { consumeQuota, readInput } from '@/lib/server/lifecycle';
+import {after} from 'next/server';
+import { consumeQuota, readInput, dispatchEmails } from '@/lib/server/lifecycle';
 import { portalUser } from '@/lib/server/portal-auth';
 import { validatePortalListing } from '@/lib/server/portal-listing';
 import { randomBytes } from 'node:crypto';
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
   if(!await consumeQuota('listings-global',50))return Response.json({error:'Please try again later.'},{status:429,headers});
   const {data,error}=await auth.db.rpc('submit_account_listing',{p_listing:row,p_user:auth.user.id,p_email:auth.user.email_confirmed_at?auth.user.email:null,p_request:input.request_id,p_management_hash:randomBytes(32).toString('hex')});
   if(error)throw error;
+  after(async()=>{try{await dispatchEmails(2,String(data));}catch{console.error('listing_confirmation_delivery_pending');}});
   return Response.json({saved:true,account_owned:true,listing_id:data},{headers});
  } catch(e) {
   const code=typeof e==='object'&&e&&'code' in e?String(e.code):'configuration_or_network';

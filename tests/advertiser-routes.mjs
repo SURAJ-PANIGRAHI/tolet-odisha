@@ -11,7 +11,7 @@ const lifecycle={serverDb:()=>db,consumeQuota:async()=>true,readInput:async requ
 const auth=load('src/lib/server/portal-auth.ts',{'server-only':{},'./lifecycle':lifecycle});
 const data=load('src/data/odisha.ts'),evolution=load('src/lib/server/evolution.ts');
 const validate=load('src/lib/server/portal-listing.ts',{'@/data/odisha':data,'./evolution':evolution});
-const mocks={'@/lib/server/lifecycle':lifecycle,'@/lib/server/portal-auth':auth,'@/lib/server/portal-listing':validate};
+const mocks={'next/server':{after:()=>{}},'@/lib/server/lifecycle':lifecycle,'@/lib/server/portal-auth':auth,'@/lib/server/portal-listing':validate};
 const post=load('src/app/api/listings/route.ts',mocks),manage=load('src/app/api/account-listings/route.ts',mocks);
 const row={title:'A property',category:'Ladies Mess',advertiser_type:'Owner',commercial_type:null,area_sqft:null,rent_monthly:3000,deposit:0,district:'Balasore',locality:'Azimabad',contact_name:'Test',contact_phone:'9876543210',images:[],amenities:[]};
 function request(body,token='good',origin='https://tolet.test'){return new Request('https://tolet.test/api/listings',{method:'POST',headers:{origin,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)});}
