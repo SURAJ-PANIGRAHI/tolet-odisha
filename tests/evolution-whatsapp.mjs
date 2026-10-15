@@ -41,11 +41,11 @@ process.env.EVOLUTION_INSTANCE_NAME='tolet';process.env.EVOLUTION_WEBHOOK_SECRET
 const webhook=load('src/app/api/webhooks/whatsapp/route.ts',{'@/lib/server/evolution':utils,'@/lib/server/lifecycle':{serverDb:()=>db}});
 assert.equal((await webhook.POST(jsonRequest(event()))).status,401);assert.equal(calls.length,0);
 assert.equal((await webhook.POST(jsonRequest(event(),{'x-evolution-webhook-secret':secret}))).status,200);
-assert.equal(calls[0].args.p_sender,'+919876543210');assert.equal(calls[0].name,'portal_accept_whatsapp_verification');
+assert.equal(calls[0].args.p_sender,'+919876543210');assert.equal(calls[0].name,'account_accept_whatsapp_verification');
 assert.equal((await webhook.POST(new Request('https://tolet.test',{method:'POST',headers:{'content-type':'application/json','x-evolution-webhook-secret':secret},body:'{broken'}))).status,400);
 dbError=true;assert.equal((await webhook.POST(jsonRequest(event(),{'x-evolution-webhook-secret':secret}))).status,503);
 let tokenSeen;
-const authDb={auth:{getUser:async token=>{tokenSeen=token;return {data:{user:token==='valid'?{id,email_confirmed_at:'2026-01-01',is_anonymous:false}:null},error:null};}},rpc:async(name,args)=>{calls.push({name,args});return {data:name==='portal_create_phone_challenge'?[{challenge_id:id,verification_text:`VERIFY_${id}_${nonce}`,valid_until:'2026-12-01'}]:[{verified:true,phone_number:'+919876543210'}],error:null};}};
+const authDb={auth:{getUser:async token=>{tokenSeen=token;return {data:{user:token==='valid'?{id,email_confirmed_at:'2026-01-01',is_anonymous:false}:null},error:null};}},rpc:async(name,args)=>{calls.push({name,args});return {data:name==='account_create_phone_challenge'?[{challenge_id:id,verification_text:`VERIFY_${id}_${nonce}`,valid_until:'2026-12-01'}]:[{verified:true,phone_number:'+919876543210'}],error:null};}};
 const auth=load('src/lib/server/portal-auth.ts',{'server-only':{},'./lifecycle':{serverDb:()=>authDb}});
 assert.equal(await auth.portalUser(new Request('https://tolet.test')),null);
 assert.equal((await auth.portalUser(new Request('https://tolet.test',{headers:{authorization:'Bearer valid'}}))).user.id,id);assert.equal(tokenSeen,'valid');

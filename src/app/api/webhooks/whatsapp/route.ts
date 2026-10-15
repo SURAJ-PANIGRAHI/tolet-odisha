@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const db = serverDb();
     for (const message of messages) {
-      const { error } = await db.rpc('portal_accept_whatsapp_verification', {
+      const { error } = await db.rpc('account_accept_whatsapp_verification', {
         p_actor: message.actor, p_nonce: message.nonce, p_sender: message.phone,
         p_instance: instance, p_message_id: message.messageId, p_sent_at: message.sentAt,
       });

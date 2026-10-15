@@ -20,6 +20,7 @@ export function WhatsAppVerification() {
   const [status, setStatus] = useState<Status | null>(null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [busy, setBusy] = useState(false);
+  const [changing, setChanging] = useState(false);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   useEffect(() => {
@@ -47,14 +48,14 @@ export function WhatsAppVerification() {
   }, [challenge, retry]);
   async function start() {
     setBusy(true); setError('');
-    try { setChallenge(await verificationRequest('POST', undefined, phone)); }
+    try { const next = await verificationRequest('POST', undefined, phone); setStatus(null); setChanging(false); setChallenge(next); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to start verification.'); }
     finally { setBusy(false); }
   }
   return <section className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
     <h2 className="text-xl font-bold">WhatsApp phone verification</h2>
-    <p className="text-slate-600">Send a verification message from your own WhatsApp number. This confirms control of the number.</p>
-    {status?.verified ? <p role="status" className="font-semibold text-green-700">Phone Verified ✅ {status.phone_number}</p> : <>
+    <p className="text-slate-600">Send a verification message from your own WhatsApp number. Verification adds trust to your profile. It confirms control of your number, not property ownership. Only listings with the same contact number receive the WhatsApp badge.</p>
+    {status?.verified && !changing ? <div><p role="status" className="font-semibold text-green-700">WhatsApp confirmed ✓ {status.phone_number}</p><button type="button" onClick={() => setChanging(true)} className="mt-3 text-sm underline">Change verified number</button></div> : <>
       <label className="block font-medium" htmlFor="verification-phone">Your Indian mobile number</label>
       <input id="verification-phone" type="tel" autoComplete="tel" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} disabled={busy || !!challenge} placeholder="9876543210" className="w-full rounded-lg border border-slate-300 p-3" />
       {!challenge ? <button type="button" disabled={busy || !phone.trim()} onClick={start} className="rounded-lg bg-[#005B94] px-4 py-3 text-white disabled:opacity-50">{busy ? 'Preparing verification…' : 'Verify Phone via WhatsApp'}</button> : <>

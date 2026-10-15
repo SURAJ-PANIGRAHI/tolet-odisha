@@ -1,5 +1,22 @@
 # Evolution WhatsApp verification
 
+## October 15 rollout: standalone account verification
+
+The live legacy listing flow now uses `20261014133327_advertiser_accounts.sql` followed by `20261015120600_account_whatsapp_verification.sql`. Apply these two only for this rollout; do not apply the portal-v2/payment/ID migrations or set NEXT_PUBLIC_PORTAL_V2_ENABLED.
+
+The signed-in dashboard mounts WhatsAppVerification directly. Routes use account_create_phone_challenge, account_phone_verification_status and account_accept_whatsapp_verification. Verified phones, hashed challenges and receipts are in account_verification_private, with RLS and no anon/authenticated access. A private service-only SECURITY DEFINER helper verifies and locks auth.users because the service Data API role cannot directly read that auth table; caller identity is validated with Auth getUser in the API. All externally exposed verification RPCs are SECURITY INVOKER and service-only.
+
+The account badge updates only account-owned legacy listings whose contact_phone matches the verified number. New submissions, claims, and contact edits recompute the badge. The public phone_verified column is generated from phone_verified_at, with no public account-to-phone directory. Starting a new-number challenge revokes the old badge. Email/Google sign-in is required; WhatsApp verification remains optional and is not a login provider. Daily lifecycle cleanup removes expired challenge records after two days and webhook receipt IDs after 30 days.
+
+Production settings: WHATSAPP_BUSINESS_NUMBER=917428975781, EVOLUTION_INSTANCE_NAME=tolet-odisha, and EVOLUTION_WEBHOOK_SECRET configured privately by the operator. Evolution webhook must carry x-evolution-webhook-secret; enable only MESSAGES_UPSERT, with by-events/base64 off. Never publish credentials or copy production secrets to preview deployments.
+
+Evolution is hosted by the operator on AWS Mumbai with HTTPS at whatsapp.toletodisha.in. The business session is connected. Operator has confirmed the custom secret is stored in Evolution; the webhook stays disabled until deployment and the real sender acceptance test. No automated real WhatsApp delivery has yet been verified.
+
+Tests: tests/account-whatsapp-db.mjs covers matching, expired/superseded challenges, replay, number uniqueness, rate limits, account confirmation, listing badge propagation/revocation, cleanup, and public permission denial. Existing v2 implementation below remains preparation for a future rollout.
+
+---
+
+
 This integration is implemented for the additive `portal_profiles` schema, not the legacy anonymous listings system. It is not activated on production. Applying these migrations does not automatically connect existing anonymous listings to signed-in accounts or add badges to their listing cards.
 
 ## What the QR code does

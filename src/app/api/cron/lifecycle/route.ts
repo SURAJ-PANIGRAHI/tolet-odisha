@@ -11,6 +11,8 @@ export async function GET(request: Request) {
   try {
     const { error } = await serverDb().rpc('run_listing_lifecycle');
     if (error) throw error;
+    const cleanup = await serverDb().rpc('account_prune_phone_verification');
+    if (cleanup.error) throw cleanup.error;
     const legacy = await dispatchEmails(5);
     if (process.env.NEXT_PUBLIC_PORTAL_V2_ENABLED !== 'true') return Response.json(legacy);
     const maintenance = await serverDb().rpc('portal_daily_maintenance');
