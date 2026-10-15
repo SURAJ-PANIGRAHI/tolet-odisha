@@ -64,13 +64,13 @@ export function ReportModal({ listing, onClose, isOdia }: { listing: Listing; on
     } finally { submitLock.current = false; setBusy(false); }
   }
 
-  return <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
-    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title" className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 space-y-4">
-      <div className="flex items-center justify-between gap-3"><h2 id="report-title" className="text-lg font-bold">{isOdia ? 'ବିଜ୍ଞାପନ ରିପୋର୍ଟ କରନ୍ତୁ' : 'Report this listing'}</h2><button type="button" disabled={busy} aria-label="Close report" onClick={onClose} className="rounded border px-3 py-2">✕</button></div>
+  return <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4">
+    <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="report-title" className="w-full max-w-lg max-h-[90vh] overflow-y-auto portal-dialog portal-form p-6 space-y-4">
+      <div className="flex items-center justify-between gap-3"><h2 id="report-title" className="text-lg font-bold">{isOdia ? 'ବିଜ୍ଞାପନ ରିପୋର୍ଟ କରନ୍ତୁ' : 'Report this listing'}</h2><button type="button" disabled={busy} aria-label="Close report" onClick={onClose} className="rounded-xl border border-slate-200 px-3 py-2">✕</button></div>
       <p className="text-sm text-slate-600">{listing.title}</p>
       {saved ? <div role="status" className="space-y-3"><p>{isOdia ? 'ରିପୋର୍ଟ ସଞ୍ଚୟ ହୋଇଛି। ପ୍ରଶାସକ ସମୀକ୍ଷା କରିବେ।' : 'Thank you. Your report has been saved and a notification queued for review.'}</p></div> : <form onSubmit={submit} className="space-y-4">
-        <label className="block text-sm font-semibold">{isOdia ? 'କାରଣ' : 'Reason'}<select value={reason} disabled={busy} onChange={event => setReason(event.target.value)} className="mt-1 block w-full rounded-lg border p-3">{reasons.map(item => <option key={item[0]} value={item[0]}>{isOdia ? item[2] : item[1]}</option>)}</select></label>
-        <label className="block text-sm font-semibold">{isOdia ? 'ବିବରଣୀ' : `Details ${reason === 'other' ? '(required)' : '(optional)'}`}<textarea value={note} disabled={busy} required={reason === 'other'} maxLength={1000} rows={4} onChange={event => setNote(event.target.value)} className="mt-1 block w-full rounded-lg border p-3" /></label>
+        <label className="block text-sm font-semibold">{isOdia ? 'କାରଣ' : 'Reason'}<select value={reason} disabled={busy} onChange={event => setReason(event.target.value)} className="mt-1 block w-full rounded-xl border p-3">{reasons.map(item => <option key={item[0]} value={item[0]}>{isOdia ? item[2] : item[1]}</option>)}</select></label>
+        <label className="block text-sm font-semibold">{isOdia ? 'ବିବରଣୀ' : `Details ${reason === 'other' ? '(required)' : '(optional)'}`}<textarea value={note} disabled={busy} required={reason === 'other'} maxLength={1000} rows={4} onChange={event => setNote(event.target.value)} className="mt-1 block w-full rounded-xl border p-3" /></label>
         <p className="text-xs text-slate-500">{isOdia ? 'ପାସୱାର୍ଡ କିମ୍ବା ବ୍ୟାଙ୍କ ତଥ୍ୟ ଲେଖନ୍ତୁ ନାହିଁ।' : 'Describe the issue without passwords, bank details or other sensitive information. Reports are visible only to administrators.'}</p>
         {error && <div role="alert" className="text-sm text-red-700">{error}</div>}
         <button type="submit" disabled={busy || (reason === 'other' && !note.trim())} className="rounded-lg bg-[#005B94] px-4 py-3 text-white disabled:opacity-50">{busy ? (isOdia ? 'ସଞ୍ଚୟ ହେଉଛି…' : 'Saving…') : (isOdia ? 'ରିପୋର୍ଟ ଦାଖଲ କରନ୍ତୁ' : 'Submit report')}</button>

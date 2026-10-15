@@ -44,7 +44,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
-  if (!auth.ready || !isAdvertiserSession(auth.session)) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div role="dialog" aria-modal="true" aria-label="Sign in to post" className="relative w-full max-w-md"><button type="button" aria-label="Close sign-in" onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 p-2 text-slate-600"><X size={18}/></button>{auth.ready ? <AdvertiserSignIn forPosting/> : <p role="status" className="rounded-2xl bg-white p-8">Checking your sign-in…</p>}</div></div>;
+  if (!auth.ready || !isAdvertiserSession(auth.session)) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"><div role="dialog" aria-modal="true" aria-label="Sign in to post" className="relative w-full max-w-md"><button type="button" aria-label="Close sign-in" onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 p-2 text-slate-600"><X size={18}/></button>{auth.ready ? <AdvertiserSignIn forPosting/> : <p role="status" className="rounded-2xl bg-white p-8">Checking your sign-in…</p>}</div></div>;
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
       prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
@@ -163,13 +163,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
       <div 
-        className="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative"
+        className="portal-dialog portal-form max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-blue-50/70 to-white px-6 py-4 border-b border-slate-100 flex items-center justify-between z-10">
           <div>
             <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-1.5">
               <Sparkles className="w-5 h-5 text-[#005B94]" />
@@ -189,7 +189,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>Your listing will be saved to your account. You can manage it from any device.</p><Link href="/dashboard" className="mt-1 inline-flex font-semibold text-[#005B94]">Manage My Listings</Link></div>
           {errorMsg && (
             <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl font-medium">

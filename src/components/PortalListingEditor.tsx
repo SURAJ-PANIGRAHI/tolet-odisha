@@ -80,14 +80,14 @@ export function PortalListingEditor({
     if (!busy) onClose();
   });
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
       <section
         ref={modal}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="editor-heading"
-        className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6"
+        className="w-full max-w-xl max-h-[90vh] overflow-y-auto portal-dialog portal-form p-6"
       >
         <h2 id="editor-heading" className="text-xl font-bold mb-4">
           Edit property
@@ -99,7 +99,7 @@ export function PortalListingEditor({
               required
               value={row.title}
               onChange={(e) => field("title", e.target.value)}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <label className="block">
@@ -107,7 +107,7 @@ export function PortalListingEditor({
             <textarea
               value={row.description || ""}
               onChange={(e) => field("description", e.target.value)}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <label className="block">
@@ -124,7 +124,7 @@ export function PortalListingEditor({
                       : null,
                 }))
               }
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             >
               {CATEGORIES.filter((c) => c.id !== "All").map((c) => (
                 <option key={c.id} value={c.id}>
@@ -139,7 +139,7 @@ export function PortalListingEditor({
               <select
                 value={row.commercial_type || "Office Space"}
                 onChange={(e) => field("commercial_type", e.target.value)}
-                className="w-full rounded border p-2"
+                className="w-full rounded-xl border border-slate-300 p-3"
               >
                 {COMMERCIAL_TYPES.map((t) => (
                   <option key={t}>{t}</option>
@@ -158,7 +158,7 @@ export function PortalListingEditor({
                   e.target.value as Listing["advertiser_type"],
                 )
               }
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             >
               <option value="">Select</option>
               {["Owner", "Broker", "Third Party"].map((t) => (
@@ -176,7 +176,7 @@ export function PortalListingEditor({
               step="1"
               value={row.rent_monthly}
               onChange={(e) => field("rent_monthly", Number(e.target.value))}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <label className="block">
@@ -188,7 +188,7 @@ export function PortalListingEditor({
               step="1"
               value={row.deposit}
               onChange={(e) => field("deposit", Number(e.target.value))}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <label className="block">
@@ -205,7 +205,7 @@ export function PortalListingEditor({
                   e.target.value ? Number(e.target.value) : null,
                 )
               }
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <label className="block">
@@ -220,7 +220,7 @@ export function PortalListingEditor({
                 }));
                 setOther(false);
               }}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             >
               {ODISHA_DISTRICTS.filter((d) => d !== "All").map((d) => (
                 <option key={d} value={d.split(" ")[0]}>
@@ -241,7 +241,7 @@ export function PortalListingEditor({
                   e.target.value === "__other" ? "" : e.target.value,
                 );
               }}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             >
               <option value="">Select</option>
               {localities
@@ -259,7 +259,7 @@ export function PortalListingEditor({
                 required
                 value={row.locality}
                 onChange={(e) => field("locality", e.target.value)}
-                className="w-full rounded border p-2"
+                className="w-full rounded-xl border border-slate-300 p-3"
               />
             </label>
           ) : null}
@@ -268,7 +268,7 @@ export function PortalListingEditor({
             <input
               value={row.landmark || ""}
               onChange={(e) => field("landmark", e.target.value)}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <label className="block">
@@ -277,7 +277,7 @@ export function PortalListingEditor({
               required
               value={row.contact_name}
               onChange={(e) => field("contact_name", e.target.value)}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <label className="block">
@@ -287,7 +287,7 @@ export function PortalListingEditor({
               type="tel"
               value={row.contact_phone}
               onChange={(e) => field("contact_phone", e.target.value)}
-              className="w-full rounded border p-2"
+              className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
           <fieldset>

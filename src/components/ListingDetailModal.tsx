@@ -40,15 +40,16 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
       <div 
-        className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative"
+        className="portal-dialog portal-form max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 flex items-center justify-center text-slate-700 shadow-md transition cursor-pointer"
+          aria-label="Close listing details"
+          className="absolute top-4 right-4 z-20 w-11 h-11 rounded-xl bg-white hover:bg-slate-100 flex items-center justify-center text-slate-700 shadow-md transition cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -83,13 +84,15 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
                 <>
                   <button
                     onClick={prevPhoto}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition cursor-pointer z-10"
+                    aria-label="Previous photo"
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition cursor-pointer z-10"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
                     onClick={nextPhoto}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition cursor-pointer z-10"
+                    aria-label="Next photo"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition cursor-pointer z-10"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
@@ -109,14 +112,14 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt="thumb" className="w-full h-full object-cover" />
+                    <img src={img} alt={`Photo ${idx+1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
             )}
           </div>
         ) : (
-          <div className="p-6 bg-gradient-to-r from-[#005B94] to-[#0077C8] text-white rounded-t-3xl">
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-[#005B94] to-[#0077C8] text-white rounded-t-3xl">
             <span className="bg-white/20 backdrop-blur-md text-xs font-bold px-3 py-1 rounded-full">
               {listing.commercial_type || listing.category}
             </span>
@@ -124,7 +127,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
           </div>
         )}
 
-        <div className="p-6">
+        <div className="p-6 sm:p-8">
           {/* Rent and Deposit Header */}
           <div className="flex items-baseline justify-between border-b border-slate-100 pb-4 mb-4">
             <div>
@@ -210,7 +213,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
                 href={waUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>WhatsApp</span>

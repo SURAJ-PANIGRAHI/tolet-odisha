@@ -1,0 +1,6 @@
+import Link from 'next/link';
+import type {ReactNode} from 'react';
+import {House,ArrowUpRight} from 'lucide-react';
+export function ContentShell({children,title,eyebrow='ToLet Odisha',wide=false}:{children:ReactNode;title:string;eyebrow?:string;wide?:boolean}){
+ return <main className="portal-surface portal-form min-h-screen px-4 py-6 sm:py-10"><div className={`mx-auto ${wide?'max-w-3xl':'max-w-xl'}`}><header className="mb-8 flex flex-wrap items-center justify-between gap-4"><Link href="/" className="inline-flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-slate-900"><span className="rounded-xl bg-[#005B94] p-2 text-white"><House size={20}/></span>ToLet<span className="-ml-2 text-[#005B94]">Odisha</span></Link><Link href="/" className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600">Browse rentals<ArrowUpRight size={14}/></Link></header><section className="portal-panel p-6 sm:p-8"><p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">{eyebrow}</p><h1 className="mb-7 mt-3 text-3xl font-bold tracking-tight text-slate-900">{title}</h1><div className="space-y-7 text-sm leading-7 text-slate-600">{children}</div></section></div></main>;
+}
