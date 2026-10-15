@@ -360,7 +360,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Account email</p><p className="mt-1 break-all text-sm text-slate-600">{auth.session?.user.email}</p><p className="mt-1 text-xs text-slate-500">Your email stays private. Renewal reminders use your confirmed account email. Listings expire after 30 days unless renewed.</p></div>
+          <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Your account</p><p className="mt-1 break-all text-sm text-slate-600">{auth.session?.user.email||auth.session?.user.phone}</p><p className="mt-1 text-xs text-slate-500">Email is optional. Verify it to receive renewal reminders. Listings expire after 30 days unless renewed.</p></div>
           {/* Amenities Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">

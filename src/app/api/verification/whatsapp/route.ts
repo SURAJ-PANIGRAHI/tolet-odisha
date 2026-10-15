@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   if (!businessNumber || !/^91[6-9]\d{9}$/.test(businessNumber) || !process.env.EVOLUTION_INSTANCE_NAME || (process.env.EVOLUTION_WEBHOOK_SECRET?.length || 0) < 32) return Response.json({ error: 'WhatsApp verification is not configured yet.' }, { status: 503, headers: noStore });
   try {
     const auth = await portalUser(request);
-    if (!auth) return Response.json({ error: 'Start a guest session or sign in first.' }, { status: 401, headers: noStore });
+    if (!auth) return Response.json({ error: 'Please sign in first.' }, { status: 401, headers: noStore });
     let input;
     try { input = await readJsonLimited(request, 1024) as { phone?: unknown }; }
     catch { return Response.json({ error: 'Invalid request.' }, { status: 400, headers: noStore }); }

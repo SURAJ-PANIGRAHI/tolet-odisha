@@ -5,8 +5,8 @@ import ts from 'typescript';
 const require=createRequire(import.meta.url);
 function load(path,mocks={}){const mod={exports:{}};const code=ts.transpileModule(readFileSync(new URL('../'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('require','module','exports',code)(name=>Object.hasOwn(mocks,name)?mocks[name]:require(name),mod,mod.exports);return mod.exports;}
 const id='00000000-0000-4000-8000-000000000001', other='00000000-0000-4000-8000-000000000002';
-let guest=false,confirmed=true,allowed=true,lastCall;
-const db={auth:{getUser:async token=>({data:{user:token==='good'?{id,email:'confirmed@example.test',is_anonymous:guest,email_confirmed_at:confirmed?'2026-01-01':null}:null},error:null})},rpc:async(name,args)=>{lastCall={name,args};return {data:allowed?(name==='submit_account_listing'?other:true):false,error:null};}};
+let guest=false,confirmed=true,allowed=true,lastCall,phoneOnly=false;
+const db={auth:{getUser:async token=>({data:{user:token==='good'?{id,email:phoneOnly?undefined:'confirmed@example.test',phone:phoneOnly?'919876543210':undefined,phone_confirmed_at:phoneOnly&&confirmed?'2026-01-01':null,is_anonymous:guest,email_confirmed_at:confirmed&&!phoneOnly?'2026-01-01':null}:null},error:null})},rpc:async(name,args)=>{lastCall={name,args};return {data:allowed?(name==='submit_account_listing'?other:true):false,error:null};}};
 const lifecycle={serverDb:()=>db,consumeQuota:async()=>true,readInput:async request=>{if(request.headers.get('origin')!==new URL(request.url).origin)throw Error('Invalid origin');return request.json();}};
 const auth=load('src/lib/server/portal-auth.ts',{'server-only':{},'./lifecycle':lifecycle});
 const data=load('src/data/odisha.ts'),evolution=load('src/lib/server/evolution.ts');
@@ -28,4 +28,5 @@ allowed=false;assert.equal((await manage.POST(request({action:'remove',listing_i
 assert.equal((await manage.POST(request({action:'claim',listing_id:other,key:'bad'}))).status,400);
 assert.equal((await manage.POST(request({action:'claim',listing_id:other,key:'a'.repeat(64),user_id:other}))).status,200);assert.equal(lastCall.args.p_user,id);assert.notEqual(lastCall.args.p_hash,'a'.repeat(64));
 assert.equal((await manage.POST(request({action:'remove',listing_id:other},null))).status,401);
+phoneOnly=true;allowed=true;confirmed=true;guest=false;response=await post.POST(request(input));assert.equal(response.status,200);assert.equal(lastCall.args.p_email,null);assert.equal(lastCall.args.p_user,id);phoneOnly=false;
 console.log('PASS account routes: reject anonymous/unconfirmed/no JWT, enforce origin, server-owned identity/email, whitelist fields, hash old credentials, deny cross-account changes');

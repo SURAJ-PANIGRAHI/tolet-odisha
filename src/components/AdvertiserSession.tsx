@@ -4,7 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 type AuthState = { session: Session | null; ready: boolean };
 const Context = createContext<AuthState>({ session: null, ready: false });
-export function isAdvertiserSession(session: Session | null) { return !!session && !session.user.is_anonymous && !!session.user.email_confirmed_at; }
+export function isAdvertiserSession(session: Session | null) { return !!session && !session.user.is_anonymous && !!(session.user.email_confirmed_at || session.user.phone_confirmed_at); }
 export function AdvertiserSession({children}: {children: React.ReactNode}) {
  const [state,setState]=useState<AuthState>({session:null,ready:false});
  useEffect(()=>{

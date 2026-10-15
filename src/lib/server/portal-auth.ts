@@ -9,8 +9,12 @@ export async function portalUser(request: Request, allowGuest = false) {
   if (
     error ||
     !data.user ||
-    (!allowGuest && (data.user.is_anonymous || !data.user.email_confirmed_at))
+    (!allowGuest && (data.user.is_anonymous || !(data.user.email_confirmed_at || data.user.phone_confirmed_at)))
   )
     return null;
+  if (!allowGuest) {
+    const synced=await db.rpc("account_sync_auth_contacts",{p_actor:data.user.id});
+    if(synced.error)throw new Error("Account verification unavailable");
+  }
   return { user: data.user, db };
 }

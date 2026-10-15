@@ -26,3 +26,5 @@ const renderNav=()=>renderToStaticMarkup(React.createElement(Navbar,{isOdia:fals
 assert(!renderNav().includes('Manage My Listings'));assert(renderNav().includes('Post Free Listings'));
 current=verifiedSession;assert(renderNav().includes('Manage My Listings'));
 console.log('PASS tenant navigation hides management; confirmed advertiser navigation reveals it; anonymous and unconfirmed sessions rejected');
+
+current={user:{is_anonymous:false,email_confirmed_at:null,phone_confirmed_at:"2026-01-01"}};assert.equal(sessionRules.isAdvertiserSession(current),true);assert(renderNav().includes("Manage My Listings"));
