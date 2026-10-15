@@ -28,7 +28,12 @@ export async function GET(request:Request){
    auth.db.from('listings').select('*').order('created_at',{ascending:false}).limit(200)
   ]);
   if(queue.error||reports.error||listings.error)throw new Error('Queue unavailable');
-  return reply({...queue.data,reports:reports.data,listings:listings.data});
+  const documents=queue.data?.documents||[];
+  const owners=[...new Set(documents.map((doc:{user_id:string})=>doc.user_id).filter(Boolean))];
+  const ownership=owners.length?await auth.db.from('listing_management_keys').select('verified_user,listings(*)').in('verified_user',owners):{data:[],error:null};
+  if(ownership.error)throw ownership.error;
+  const linked=documents.map((doc:{user_id:string})=>({...doc,properties:(ownership.data||[]).filter(item=>item.verified_user===doc.user_id).flatMap(item=>item.listings||[])}));
+  return reply({...queue.data,documents:linked,reports:reports.data,listings:listings.data});
  }catch{return reply({error:'Unable to load the admin workspace. Please retry.'},503);}
 }
 export async function POST(request:Request){
