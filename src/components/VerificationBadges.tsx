@@ -1,4 +1,18 @@
 import type { Listing } from "@/lib/supabase";
+import { ShieldCheck } from "lucide-react";
+
+export function ListingVerificationStamp({ listing }: { listing: Listing }) {
+  const checks = [
+    listing.id_verified ? "Government ID verified" : null,
+    listing.phone_verified ? "WhatsApp verified" : null,
+    listing.email_verified ? "Email verified" : null,
+  ].filter((value): value is string => value !== null);
+  if (!checks.length) return null;
+  return <span
+    title={`${checks.join(" · ")}. Verification does not confirm property ownership.`}
+    className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/80 bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-md"
+  ><ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0" />{checks[0]}</span>;
+}
 export function VerificationBadges({ listing }: { listing: Listing }) {
   const flags = [
     ["Email", !!listing.email_verified, "Confirmed ✓", "Not confirmed"],

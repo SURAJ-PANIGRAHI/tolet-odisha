@@ -1,5 +1,5 @@
 'use client';
-import { VerificationBadges } from './VerificationBadges';
+import { ListingVerificationStamp, VerificationBadges } from './VerificationBadges';
 
 import React, { useState } from 'react';
 import { ReportModal } from '@/components/ReportModal';
@@ -65,6 +65,9 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
               />
               
               {/* Category Badge */}
+              <div className="absolute right-3 top-16 left-3 z-10 flex justify-end">
+                <ListingVerificationStamp listing={listing} />
+              </div>
               <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full font-medium z-10">
                 {listing.commercial_type || listing.category}
               </div>

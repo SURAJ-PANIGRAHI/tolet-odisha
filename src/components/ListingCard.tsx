@@ -1,5 +1,5 @@
 'use client';
-import { VerificationBadges } from './VerificationBadges';
+import { ListingVerificationStamp, VerificationBadges } from './VerificationBadges';
 
 import React from 'react';
 import { Listing } from '@/lib/supabase';
@@ -52,9 +52,13 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing, isOdia, onSel
                 {listing.commercial_type || listing.category}
               </span>
             </div>
+            <div className="absolute bottom-3 right-3 left-3 flex justify-end">
+              <ListingVerificationStamp listing={listing} />
+            </div>
           </div>
         ) : (
           <div className="p-4 pb-1">
+            <ListingVerificationStamp listing={listing} />
             <div className="flex items-center justify-between mb-2">
               <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${getCategoryColor(listing.category)}`}>
                 {listing.commercial_type || listing.category}
