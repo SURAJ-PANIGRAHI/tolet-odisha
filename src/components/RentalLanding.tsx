@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { RentBudgetSlider } from '@/components/RentBudgetSlider';
 import { compareListings } from '@/lib/listing-sort';
 import { portalEnabled } from '@/lib/client/portal';
 import React, { useEffect, useState, useMemo } from 'react';
@@ -33,16 +34,9 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
   const [selectedDistrict, setSelectedDistrict] = useState('Balasore');
   const [selectedLocality, setSelectedLocality] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  // Null keeps the initial budget at the full available range as ads load.
+  // A null maximum includes listings above ₹5 lakh too.
+  const [minRent, setMinRent] = useState(1000);
   const [maxRent, setMaxRent] = useState<number | null>(null);
-  const sliderMax = useMemo(() => {
-    const highestRent = listings.reduce((highest, listing) => {
-      if (listing.expires_at && Date.parse(listing.expires_at) <= clock) return highest;
-      return Number.isFinite(listing.rent_monthly) ? Math.max(highest, listing.rent_monthly) : highest;
-    }, 500000);
-    return Math.ceil(highestRent / 500) * 500;
-  }, [listings, clock]);
-  const budgetLimit = Math.min(maxRent ?? sliderMax, sliderMax);
   const [commercialType, setCommercialType] = useState('All');
   const [sortBy, setSortBy] = useState(portalEnabled ? 'recommended' : 'newest');
   function selectCategory(value: string) {
@@ -111,7 +105,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
       if (selectedCategory === 'Commercial / Shop' && commercialType !== 'All' && item.commercial_type !== commercialType) return false;
 
       // Max Rent filter
-      if (item.rent_monthly > budgetLimit) {
+      if (item.rent_monthly < minRent || (maxRent !== null && item.rent_monthly > maxRent)) {
         return false;
       }
 
@@ -129,7 +123,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
 
       return true;
     }).sort((a, b) => compareListings(a, b, sortBy, portalEnabled));
-  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, budgetLimit, searchQuery, clock]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, minRent, maxRent, searchQuery, clock]);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-20 sm:pb-12">
@@ -215,7 +209,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
         </div>
 
         {/* Results Header & Max Rent Slider */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-6 mb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mt-6 mb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
               {isOdia ? 'ଉପଲବ୍ଧ ବିଜ୍ଞାପନ' : 'Find your next place'}
@@ -225,23 +219,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
             </span>
           </div>
 
-          {/* Max Rent Filter Slider */}
-          <div className="flex items-center gap-3 bg-white px-3.5 py-1.5 rounded-xl border border-slate-200/80 text-xs shadow-2xs">
-            <span className="text-slate-500 font-medium">
-              {isOdia ? 'ସର୍ବାଧିକ ଭଡ଼ା:' : 'Max Rent:'}
-            </span>
-            <span className="font-black text-[#005B94]">₹{budgetLimit.toLocaleString('en-IN')}</span>
-            <input
-              type="range"
-              min="1000"
-              max={sliderMax}
-              aria-label="Maximum monthly rent"
-              step="500"
-              value={budgetLimit}
-              onChange={(e) => setMaxRent(Number(e.target.value))}
-              className="accent-[#005B94] w-24 sm:w-32 cursor-pointer"
-            />
-          </div>
+          <RentBudgetSlider minValue={minRent} onMinChange={setMinRent} value={maxRent} onChange={setMaxRent} isOdia={isOdia} />
         </div>
 
         {/* Listings Grid */}
