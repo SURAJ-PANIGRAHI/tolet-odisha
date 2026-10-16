@@ -3,6 +3,7 @@ import {
   COMMERCIAL_TYPES,
   ODISHA_DISTRICTS,
   POPULAR_AMENITIES,
+  FURNISHING_OPTIONS,
 } from "@/data/odisha";
 import { indianPhone } from "./evolution";
 export function validatePortalListing(value: unknown) {
@@ -64,6 +65,7 @@ export function validatePortalListing(value: unknown) {
     !Array.isArray(row.amenities) ||
     row.amenities.some((a) => !POPULAR_AMENITIES.includes(a)) ||
     row.amenities.length > POPULAR_AMENITIES.length ||
+    row.amenities.filter(a => FURNISHING_OPTIONS.includes(a)).length > 1 ||
     String(row.description || "").length > 5000 ||
     String(row.landmark || "").length > 200
   )

@@ -10,6 +10,7 @@ import {
   ODISHA_DISTRICTS,
   DISTRICT_LOCALITIES,
   POPULAR_AMENITIES,
+  toggleAmenitySelection,
 } from "@/data/odisha";
 export function PortalListingEditor({
   listing,
@@ -302,7 +303,7 @@ export function PortalListingEditor({
                       field(
                         "amenities",
                         e.target.checked
-                          ? [...row.amenities, a]
+                          ? toggleAmenitySelection(row.amenities.filter(x => x !== a), a)
                           : row.amenities.filter((x) => x !== a),
                       )
                     }

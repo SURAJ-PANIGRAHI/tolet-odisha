@@ -160,6 +160,7 @@ export const CATEGORIES = [
   { id: 'Boys Mess', label: 'Boys Mess', labelOdia: 'ପୁଅ ମେସ୍' },
   { id: 'Ladies Mess', label: 'Ladies Mess', labelOdia: 'ମହିଳା ମେସ୍' },
   { id: 'Paying Guest (PG)', label: 'Paying Guest (PG)', labelOdia: 'ପେଇଂ ଗେଷ୍ଟ (PG)' },
+  { id: 'Boys Hostel', label: 'Boys Hostel', labelOdia: 'ପୁଅ ହଷ୍ଟେଲ' },
   { id: 'Girls Hostel', label: 'Girls Hostel', labelOdia: 'ଝିଅ ହଷ୍ଟେଲ' },
   { id: 'Bachelor Room', label: 'Single / Bachelor Room', labelOdia: 'ବ୍ୟାଚଲର ରୁମ୍' },
   { id: '1 BHK Flat', label: '1 BHK Flat', labelOdia: '୧ ବିଏଚକେ ଫ୍ଲାଟ' },
@@ -170,6 +171,10 @@ export const CATEGORIES = [
 ];
 
 export const POPULAR_AMENITIES = [
+  'Air Conditioned',
+  'Furnished',
+  'Semi-furnished',
+  'Unfurnished',
   'Wi-Fi',
   'Drinking Water (RO)',
   'Attached Washroom',
@@ -182,3 +187,10 @@ export const POPULAR_AMENITIES = [
 ];
 
 export const COMMERCIAL_TYPES = ['Office Space', 'Shop / Showroom', 'Bank / ATM Space', 'Warehouse / Godown', 'Other Commercial'] as const;
+
+export const FURNISHING_OPTIONS = ['Furnished', 'Semi-furnished', 'Unfurnished'];
+export function toggleAmenitySelection(current: string[], amenity: string): string[] {
+  if (current.includes(amenity)) return current.filter(item => item !== amenity);
+  const remaining = FURNISHING_OPTIONS.includes(amenity) ? current.filter(item => !FURNISHING_OPTIONS.includes(item)) : current;
+  return [...remaining, amenity];
+}

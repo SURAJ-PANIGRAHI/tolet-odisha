@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { AmenitiesFilter } from '@/components/AmenitiesFilter';
 import { RentBudgetSlider, DesktopRentSlider } from '@/components/RentBudgetSlider';
 import { compareListings } from '@/lib/listing-sort';
 import { portalEnabled } from '@/lib/client/portal';
@@ -37,11 +38,13 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
   // A null maximum includes listings above ₹5 lakh too.
   const [minRent, setMinRent] = useState(1000);
   const [maxRent, setMaxRent] = useState<number | null>(null);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [commercialType, setCommercialType] = useState('All');
   const [sortBy, setSortBy] = useState(portalEnabled ? 'recommended' : 'newest');
   function selectCategory(value: string) {
     setSelectedCategory(value);
     setCommercialType('All');
+    if (value === 'Commercial / Shop') setSelectedAmenities([]);
   }
 
   // Fetch public listings once, ignoring results after unmount.
@@ -104,6 +107,8 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
 
       if (selectedCategory === 'Commercial / Shop' && commercialType !== 'All' && item.commercial_type !== commercialType) return false;
 
+      if (selectedCategory !== 'Commercial / Shop' && !selectedAmenities.every(amenity => (item.amenities || []).includes(amenity))) return false;
+
       // Max Rent filter
       if (item.rent_monthly < minRent || (maxRent !== null && item.rent_monthly > maxRent)) {
         return false;
@@ -123,7 +128,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
 
       return true;
     }).sort((a, b) => compareListings(a, b, sortBy, portalEnabled));
-  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, minRent, maxRent, searchQuery, clock]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, selectedAmenities, sortBy, minRent, maxRent, searchQuery, clock]);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-20 sm:pb-12">
@@ -195,6 +200,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
               {COMMERCIAL_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
             </select>
           </label>}
+          {selectedCategory !== 'Commercial / Shop' && <AmenitiesFilter selected={selectedAmenities} onChange={setSelectedAmenities} isOdia={isOdia} />}
           <label className="text-xs font-bold text-slate-700 sm:col-start-3">
             {isOdia ? 'ସଜାନ୍ତୁ (Sort by)' : 'Sort by'}
             <select value={sortBy} onChange={event => setSortBy(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">

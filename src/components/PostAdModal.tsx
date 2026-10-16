@@ -9,7 +9,7 @@ import { AdvertiserSignIn } from './AdvertiserSignIn';
 import { useAdvertiserSession, isAdvertiserSession } from './AdvertiserSession';
 import { portalEnabled } from '@/lib/client/portal';
 import { supabase } from '@/lib/supabase';
-import { ODISHA_DISTRICTS, CATEGORIES, POPULAR_AMENITIES, COMMERCIAL_TYPES } from '@/data/odisha';
+import { ODISHA_DISTRICTS, CATEGORIES, POPULAR_AMENITIES, COMMERCIAL_TYPES, toggleAmenitySelection } from '@/data/odisha';
 import { X, Upload, Check, Loader2, Sparkles } from 'lucide-react';
 
 interface PostAdModalProps {
@@ -47,7 +47,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   if (!auth.ready || !isAdvertiserSession(auth.session)) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"><div role="dialog" aria-modal="true" aria-label="Sign in to post" className="relative w-full max-w-md"><button type="button" aria-label="Close sign-in" onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 p-2 text-slate-600"><X size={18}/></button>{auth.ready ? <AdvertiserSignIn forPosting/> : <p role="status" className="rounded-2xl bg-white p-8">Checking your sign-in…</p>}</div></div>;
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
-      prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+      toggleAmenitySelection(prev, amenity)
     );
   };
 
@@ -374,6 +374,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                     type="button"
                     key={i}
                     onClick={() => toggleAmenity(amenity)}
+                    aria-pressed={isSelected}
                     className={`text-xs px-2.5 py-1 rounded-full border transition flex items-center gap-1 cursor-pointer ${
                       isSelected
                         ? 'bg-[#005B94] text-white border-[#005B94] font-semibold'
