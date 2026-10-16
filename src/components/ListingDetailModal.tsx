@@ -135,6 +135,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
               <div className="text-3xl font-black text-slate-900">
                 ₹{listing.rent_monthly.toLocaleString('en-IN')}
               </div>
+              {listing.rent_negotiable&&<span className="mt-2 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-[#005B94]">Rent negotiable</span>}
             </div>
             {listing.deposit > 0 && (
               <div className="text-right">

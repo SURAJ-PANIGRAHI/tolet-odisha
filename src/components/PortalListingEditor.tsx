@@ -29,6 +29,7 @@ export function PortalListingEditor({
     [files, setFiles] = useState<File[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [sameWhatsApp,setSameWhatsApp] = useState(!listing.whatsapp_number || listing.whatsapp_number === listing.contact_phone);
   const localities = DISTRICT_LOCALITIES[row.district] || [];
   const [other, setOther] = useState(!localities.includes(listing.locality));
   function field<K extends keyof Listing>(key: K, value: Listing[K]) {
@@ -180,6 +181,7 @@ export function PortalListingEditor({
               className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={!!row.rent_negotiable} onChange={e=>field("rent_negotiable",e.target.checked)}/> Rent negotiable</label>
           <label className="block">
             Deposit (₹)
             <input
@@ -287,10 +289,12 @@ export function PortalListingEditor({
               required
               type="tel"
               value={row.contact_phone}
-              onChange={(e) => field("contact_phone", e.target.value)}
+              onChange={(e) => setRow(r=>({...r,contact_phone:e.target.value,...(sameWhatsApp?{whatsapp_number:e.target.value}:{})}))}
               className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={sameWhatsApp} onChange={e=>{setSameWhatsApp(e.target.checked);if(e.target.checked)field("whatsapp_number",row.contact_phone);}}/> Use the same number for calls and WhatsApp</label>
+          {!sameWhatsApp&&<label className="block">WhatsApp number<input required type="tel" value={row.whatsapp_number||''} onChange={e=>field("whatsapp_number",e.target.value)} className="w-full rounded-xl border border-slate-300 p-3"/></label>}
           <fieldset>
             <legend>Amenities</legend>
             <div className="flex flex-wrap gap-3">

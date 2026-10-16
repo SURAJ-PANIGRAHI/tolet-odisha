@@ -21,8 +21,10 @@ export function validatePortalListing(value: unknown) {
     typeof row.contact_phone === "string"
       ? indianPhone(row.contact_phone)
       : null;
+  const whatsapp = row.whatsapp_number == null ? phone : typeof row.whatsapp_number === "string" ? indianPhone(row.whatsapp_number) : null;
+  if (row.rent_negotiable !== undefined && typeof row.rent_negotiable !== "boolean") throw new Error("Check the negotiable rent option.");
   if (
-    !phone ||
+    !phone || !whatsapp ||
     !CATEGORIES.some((c) => c.id !== "All" && c.id === row.category) ||
     !ODISHA_DISTRICTS.some((d) => d.split(" ")[0] === row.district) ||
     !["Owner", "Broker", "Third Party"].includes(String(row.advertiser_type))
@@ -91,7 +93,8 @@ export function validatePortalListing(value: unknown) {
       .map((key) => [key, row[key]])
       .concat([
         ["contact_phone", phone.slice(3)],
-        ["whatsapp_number", phone.slice(3)],
+        ["whatsapp_number", whatsapp.slice(3)],
+        ["rent_negotiable", row.rent_negotiable === true],
       ]),
   );
 }

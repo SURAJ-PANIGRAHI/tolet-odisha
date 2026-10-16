@@ -16,6 +16,7 @@ export interface Listing {
   area_sqft?: number | null;
   advertiser_type?: 'Owner' | 'Broker' | 'Third Party' | null;
   rent_monthly: number;
+  rent_negotiable?: boolean;
   deposit: number;
   district: string;
   locality: string;

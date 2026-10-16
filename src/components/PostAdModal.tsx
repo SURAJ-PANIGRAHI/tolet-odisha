@@ -30,6 +30,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
   const [advertiserType, setAdvertiserType] = useState(adminClient ? 'Third Party' : '');
+  const [rentNegotiable, setRentNegotiable] = useState(false);
+  const [sameWhatsApp, setSameWhatsApp] = useState(true);
+  const [whatsappPhone, setWhatsappPhone] = useState('');
   const [rent, setRent] = useState('');
   const [commercialType, setCommercialType] = useState('');
   const [areaSqft, setAreaSqft] = useState('');
@@ -80,6 +83,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       return;
     }
     const phone = contactPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    const whatsapp = (sameWhatsApp ? contactPhone : whatsappPhone).replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    if (!/^[6-9]\d{9}$/.test(whatsapp)) { setErrorMsg('Enter a valid Indian WhatsApp number.'); return; }
     if (!/^[6-9]\d{9}$/.test(phone) || !Number.isInteger(Number(rent)) || Number(rent) < 0 || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0) {
       setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
       return;
@@ -134,7 +139,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           landmark: landmark || null,
           contact_name: contactName,
           contact_phone: phone,
-          whatsapp_number: phone,
+          whatsapp_number: whatsapp,
+          rent_negotiable: rentNegotiable,
           amenities: selectedAmenities,
           images: imageUrls,
           is_active: false,
@@ -259,6 +265,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             <span className="mt-1 block font-normal text-slate-500">Choose Third Party if you are posting on someone else’s behalf without acting as a broker.</span>
           </label>
 
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={rentNegotiable} onChange={e=>setRentNegotiable(e.target.checked)}/> Rent negotiable</label>
           {/* Rent & Deposit */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -351,7 +358,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                {isOdia ? 'ମୋବାଇଲ୍ ନମ୍ବର *' : 'Mobile / WhatsApp *'}
+                {isOdia ? 'ମୋବାଇଲ୍ ନମ୍ବର *' : 'Contact number for calls *'}
               </label>
               <input
                 type="tel"
@@ -365,6 +372,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
+          <div className="space-y-3 rounded-xl border border-slate-100 p-3"><label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={sameWhatsApp} onChange={e=>setSameWhatsApp(e.target.checked)}/> Use the same number for calls and WhatsApp</label>{!sameWhatsApp&&<label className="block text-sm font-medium">WhatsApp number *<input required type="tel" autoComplete="tel" value={whatsappPhone} onChange={e=>setWhatsappPhone(e.target.value)} placeholder="10-digit WhatsApp number" className="mt-1 w-full rounded-xl border border-slate-200 p-3"/></label>}<p className="text-xs text-slate-500">The WhatsApp badge applies only when this listing’s WhatsApp number is verified by your account.</p></div>
           <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Your account</p><p className="mt-1 break-all text-sm text-slate-600">{adminClient ? 'Administrator account' : auth.session?.user.email||auth.session?.user.phone}</p><p className="mt-1 text-xs text-slate-500">Email is optional. Verify it to receive renewal reminders. Listings expire after 30 days unless renewed.</p></div>
           {/* Amenities Selector */}
           <div>
