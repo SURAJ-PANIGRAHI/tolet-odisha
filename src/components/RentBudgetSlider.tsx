@@ -6,7 +6,8 @@ const money = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
 const ABOVE = RENT_STOPS.length;
 const amountAt = (index: number) => RENT_STOPS[index] ?? 500001;
 
-export function RentBudgetSlider({ minValue, value, onMinChange, onChange, isOdia = false }: {
+export function RentBudgetSlider({ minValue, value, onMinChange, onChange, isOdia = false, compact = false }: {
+  compact?: boolean;
   minValue: number;
   value: number | null;
   onMinChange: (value: number) => void;
@@ -21,8 +22,9 @@ export function RentBudgetSlider({ minValue, value, onMinChange, onChange, isOdi
   const fieldStyle = 'min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-2 text-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
 
   return (
-    <section aria-label="Monthly rent budget" className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:max-w-[360px]">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2">
+    <section aria-label="Monthly rent budget" className={compact ? 'w-80 rounded-xl border border-slate-200 bg-white px-3 py-1 shadow-sm' : 'w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:max-w-[360px]'}>
+      {compact ? <div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium text-slate-600">{isOdia ? 'ବଜେଟ୍ / ମାସ' : 'Rent / month'}</span><span className="font-bold text-[#005B94]">{low === ABOVE ? '> ₹5,00,000' : money(minValue)} – {value === null ? (isOdia ? 'ସୀମା ନାହିଁ' : 'No maximum') : money(value)}</span></div> : null}
+      <div className={compact ? 'hidden' : 'grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2'}>
         <label className="min-w-0 text-xs font-medium text-slate-600">{isOdia ? 'ସର୍ବନିମ୍ନ ଭଡ଼ା' : 'Min Rent'}
           <select value={low} onChange={event => chooseLow(Number(event.target.value))} className={`${fieldStyle} mt-1`}>
             {RENT_STOPS.map((amount, index) => <option key={amount} value={index} disabled={index > high}>{money(amount)}</option>)}
@@ -49,26 +51,17 @@ export function RentBudgetSlider({ minValue, value, onMinChange, onChange, isOdi
       <div aria-hidden="true" className="hidden justify-between px-3">
         {Array.from({ length: ABOVE + 1 }, (_, index) => <span key={index} className={`h-1.5 w-0.5 rounded-full ${index >= low && index <= high ? 'bg-[#005B94]' : 'bg-slate-200'}`} />)}
       </div>
-      <div aria-hidden="true" className="mt-1 flex justify-between text-xs font-medium text-slate-500"><span>₹1,000</span><span>₹5,00,000+</span></div>
+      <div aria-hidden="true" className={compact ? 'hidden' : 'mt-1 flex justify-between text-xs font-medium text-slate-500'}><span>₹1,000</span><span>₹5,00,000+</span></div>
     </section>
   );
 }
 
-export function DesktopRentSlider({ value, onChange, isOdia = false }: {
+export function DesktopRentSlider(props: {
+  minValue: number;
   value: number | null;
+  onMinChange: (value: number) => void;
   onChange: (value: number | null) => void;
   isOdia?: boolean;
 }) {
-  const position = value === null ? ABOVE : RENT_STOPS.findIndex(stop => stop >= value);
-  const description = value === null ? (isOdia ? 'ସୀମା ନାହିଁ' : 'No maximum') : money(value);
-  return (
-    <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs shadow-sm">
-      <span className="whitespace-nowrap font-medium text-slate-600">{isOdia ? 'ସର୍ବାଧିକ ଭଡ଼ା:' : 'Max Rent:'}</span>
-      <span className="min-w-20 whitespace-nowrap font-bold text-[#005B94]">{description}</span>
-      <input type="range" min={0} max={ABOVE} step={1} value={position}
-        aria-label="Maximum monthly rent" aria-valuetext={description}
-        onChange={event => { const index = Number(event.target.value); onChange(index === ABOVE ? null : amountAt(index)); }}
-        className="h-9 w-32 cursor-pointer accent-[#005B94] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" />
-    </label>
-  );
+  return <RentBudgetSlider {...props} compact />;
 }

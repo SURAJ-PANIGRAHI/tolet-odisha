@@ -36,17 +36,6 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   // A null maximum includes listings above ₹5 lakh too.
   const [minRent, setMinRent] = useState(1000);
-  const [desktopBudget, setDesktopBudget] = useState(false);
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 1024px)');
-    const sync = () => {
-      setDesktopBudget(media.matches);
-      if (media.matches) setMinRent(1000);
-    };
-    sync();
-    media.addEventListener('change', sync);
-    return () => media.removeEventListener('change', sync);
-  }, []);
   const [maxRent, setMaxRent] = useState<number | null>(null);
   const [commercialType, setCommercialType] = useState('All');
   const [sortBy, setSortBy] = useState(portalEnabled ? 'recommended' : 'newest');
@@ -116,7 +105,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
       if (selectedCategory === 'Commercial / Shop' && commercialType !== 'All' && item.commercial_type !== commercialType) return false;
 
       // Max Rent filter
-      if (item.rent_monthly < (desktopBudget ? 1000 : minRent) || (maxRent !== null && item.rent_monthly > maxRent)) {
+      if (item.rent_monthly < minRent || (maxRent !== null && item.rent_monthly > maxRent)) {
         return false;
       }
 
@@ -134,7 +123,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
 
       return true;
     }).sort((a, b) => compareListings(a, b, sortBy, portalEnabled));
-  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, desktopBudget, minRent, maxRent, searchQuery, clock]);
+  }, [listings, selectedDistrict, selectedLocality, selectedCategory, commercialType, sortBy, minRent, maxRent, searchQuery, clock]);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-20 sm:pb-12">
@@ -231,7 +220,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
           </div>
 
           <div className="hidden lg:block">
-            <DesktopRentSlider value={maxRent} onChange={setMaxRent} isOdia={isOdia} />
+            <DesktopRentSlider minValue={minRent} onMinChange={setMinRent} value={maxRent} onChange={setMaxRent} isOdia={isOdia} />
           </div>
           <div className="w-full sm:max-w-[360px] lg:hidden">
             <RentBudgetSlider minValue={minRent} onMinChange={setMinRent} value={maxRent} onChange={setMaxRent} isOdia={isOdia} />
