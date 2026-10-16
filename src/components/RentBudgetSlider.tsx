@@ -53,3 +53,22 @@ export function RentBudgetSlider({ minValue, value, onMinChange, onChange, isOdi
     </section>
   );
 }
+
+export function DesktopRentSlider({ value, onChange, isOdia = false }: {
+  value: number | null;
+  onChange: (value: number | null) => void;
+  isOdia?: boolean;
+}) {
+  const position = value === null ? ABOVE : RENT_STOPS.findIndex(stop => stop >= value);
+  const description = value === null ? (isOdia ? 'ସୀମା ନାହିଁ' : 'No maximum') : money(value);
+  return (
+    <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs shadow-sm">
+      <span className="whitespace-nowrap font-medium text-slate-600">{isOdia ? 'ସର୍ବାଧିକ ଭଡ଼ା:' : 'Max Rent:'}</span>
+      <span className="min-w-20 whitespace-nowrap font-bold text-[#005B94]">{description}</span>
+      <input type="range" min={0} max={ABOVE} step={1} value={position}
+        aria-label="Maximum monthly rent" aria-valuetext={description}
+        onChange={event => { const index = Number(event.target.value); onChange(index === ABOVE ? null : amountAt(index)); }}
+        className="h-9 w-32 cursor-pointer accent-[#005B94] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" />
+    </label>
+  );
+}
