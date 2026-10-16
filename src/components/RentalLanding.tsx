@@ -181,21 +181,24 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
           })}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 rounded-2xl border border-slate-100 bg-white p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:items-center gap-4 mt-5 rounded-2xl border border-slate-100 bg-white p-4">
           <label className="text-xs font-bold text-slate-700">
             {isOdia ? 'ସମ୍ପତ୍ତି ପ୍ରକାର (Property type)' : 'Property type'}
             <select value={selectedCategory} onChange={event => selectCategory(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
               {CATEGORIES.map(category => <option key={category.id} value={category.id}>{isOdia ? category.labelOdia : category.label}</option>)}
             </select>
           </label>
-          {selectedCategory === 'Commercial / Shop' && <label className="text-xs font-bold text-slate-700">
+          <div className="hidden lg:col-start-2 lg:row-start-1 lg:flex lg:justify-center">
+            <RentBudgetSlider minValue={minRent} onMinChange={setMinRent} value={maxRent} onChange={setMaxRent} isOdia={isOdia} />
+          </div>
+          {selectedCategory === 'Commercial / Shop' && <label className="text-xs font-bold text-slate-700 lg:col-start-1 lg:row-start-2">
             {isOdia ? 'ବ୍ୟବସାୟିକ ପ୍ରକାର (Commercial type)' : 'Commercial type'}
             <select value={commercialType} onChange={event => setCommercialType(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
               <option value="All">All commercial types</option>
               {COMMERCIAL_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
             </select>
           </label>}
-          <label className="text-xs font-bold text-slate-700 sm:col-start-3">
+          <label className="text-xs font-bold text-slate-700 sm:col-start-3 lg:row-start-1">
             {isOdia ? 'ସଜାନ୍ତୁ (Sort by)' : 'Sort by'}
             <select value={sortBy} onChange={event => setSortBy(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm">
               {portalEnabled ? <option value="recommended">Recommended</option> : null}
@@ -219,7 +222,9 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
             </span>
           </div>
 
-          <RentBudgetSlider minValue={minRent} onMinChange={setMinRent} value={maxRent} onChange={setMaxRent} isOdia={isOdia} />
+          <div className="w-full sm:max-w-[360px] lg:hidden">
+            <RentBudgetSlider minValue={minRent} onMinChange={setMinRent} value={maxRent} onChange={setMaxRent} isOdia={isOdia} />
+          </div>
         </div>
 
         {/* Listings Grid */}
