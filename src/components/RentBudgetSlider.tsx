@@ -23,7 +23,7 @@ export function RentBudgetSlider({ minValue, value, onMinChange, onChange, isOdi
 
   return (
     <section aria-label="Monthly rent budget" className={compact ? 'w-80 rounded-xl border border-slate-200 bg-white px-3 py-1 shadow-sm' : 'w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:max-w-[360px]'}>
-      {compact ? <div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium text-slate-600">{isOdia ? 'ବଜେଟ୍ / ମାସ' : 'Rent / month'}</span><span className="font-bold text-[#005B94]">{low === ABOVE ? '> ₹5,00,000' : money(minValue)} – {value === null ? (isOdia ? 'ସୀମା ନାହିଁ' : 'No maximum') : money(value)}</span></div> : null}
+      {compact ? <div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium text-slate-600">{isOdia ? 'ବଜେଟ୍ / ମାସ' : 'Rent per month'}</span><span className="font-bold text-[#005B94]">{low === ABOVE ? '> ₹5,00,000' : money(minValue)} – {value === null ? (isOdia ? 'ସୀମା ନାହିଁ' : 'No maximum') : money(value)}</span></div> : null}
       <div className={compact ? 'hidden' : 'grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-2'}>
         <label className="min-w-0 text-xs font-medium text-slate-600">{isOdia ? 'ସର୍ବନିମ୍ନ ଭଡ଼ା' : 'Min Rent'}
           <select value={low} onChange={event => chooseLow(Number(event.target.value))} className={`${fieldStyle} mt-1`}>
