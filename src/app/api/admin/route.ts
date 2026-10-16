@@ -1,3 +1,5 @@
+import {randomBytes} from 'node:crypto';
+import {validatePortalListing} from '@/lib/server/portal-listing';
 import {after} from 'next/server';
 import {dispatchSupportReplies} from '@/lib/server/support';
 import { portalUser } from '@/lib/server/portal-auth';
@@ -53,6 +55,12 @@ export async function POST(request:Request){
  try{
   const auth=await administrator(request);if(!auth)return reply({error:'Administrator sign-in required.'},403);
   let input:Record<string,unknown>;try{input=await readInput(request);}catch{return reply({error:'Invalid request.'},400);}
+  if(input.action==='create_listing'){
+   if(typeof input.request_id!=='string'||!isUuid(input.request_id))return reply({error:'Reload the form and try again.'},400);
+   let row:Record<string,unknown>;try{row=validatePortalListing(input.listing);}catch(error){return reply({error:error instanceof Error?error.message:'Invalid listing.'},400);}
+   const result=await auth.db.rpc('submit_account_listing',{p_listing:row,p_user:auth.user.id,p_email:auth.user.email_confirmed_at?auth.user.email:null,p_request:input.request_id,p_management_hash:randomBytes(32).toString('hex')});
+   if(result.error)throw result.error;return reply({saved:true,listing_id:result.data});
+  }
   if(input.action==='support_reply'||input.action==='support_resolve'){
    if(typeof input.ticket_id!=='string'||!isUuid(input.ticket_id))return reply({error:'Invalid ticket.'},400);
    const sending=input.action==='support_reply';

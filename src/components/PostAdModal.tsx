@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { managementPath as normalizeManagementPath, saveListing } from '@/lib/client/saved-listings';
 import { LocalityPicker } from './LocalityPicker';
@@ -17,9 +18,10 @@ interface PostAdModalProps {
   onClose: () => void;
   onSuccess: () => void;
   isOdia: boolean;
+  adminClient?: SupabaseClient;
 }
 
-export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuccess, isOdia }) => {
+export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuccess, isOdia, adminClient }) => {
   const router = useRouter();
   const auth = useAdvertiserSession();
   const [requestId] = useState(() => crypto.randomUUID());
@@ -27,7 +29,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
-  const [advertiserType, setAdvertiserType] = useState('');
+  const [advertiserType, setAdvertiserType] = useState(adminClient ? 'Third Party' : '');
   const [rent, setRent] = useState('');
   const [commercialType, setCommercialType] = useState('');
   const [areaSqft, setAreaSqft] = useState('');
@@ -43,8 +45,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const client = adminClient || supabase;
   if (!isOpen) return null;
-  if (!auth.ready || !isAdvertiserSession(auth.session)) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"><div role="dialog" aria-modal="true" aria-label="Sign in to post" className="relative w-full max-w-md"><button type="button" aria-label="Close sign-in" onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 p-2 text-slate-600"><X size={18}/></button>{auth.ready ? <AdvertiserSignIn forPosting/> : <p role="status" className="rounded-2xl bg-white p-8">Checking your sign-in…</p>}</div></div>;
+  if (!adminClient && (!auth.ready || !isAdvertiserSession(auth.session))) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"><div role="dialog" aria-modal="true" aria-label="Sign in to post" className="relative w-full max-w-md"><button type="button" aria-label="Close sign-in" onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 p-2 text-slate-600"><X size={18}/></button>{auth.ready ? <AdvertiserSignIn forPosting/> : <p role="status" className="rounded-2xl bg-white p-8">Checking your sign-in…</p>}</div></div>;
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
       toggleAmenitySelection(prev, amenity)
@@ -88,7 +91,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await client.auth.getSession();
       if (!isAdvertiserSession(session)) throw new Error('Please sign in again before posting.');
       const imageUrls: string[] = [];
 
@@ -98,13 +101,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `listings/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await client.storage
           .from('listing-images')
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
         if (!uploadError) {
-          const { data: publicUrlData } = supabase.storage
+          const { data: publicUrlData } = client.storage
             .from('listing-images')
             .getPublicUrl(filePath);
           if (publicUrlData.publicUrl) {
@@ -114,9 +117,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       }
 
       // Insert listing into Supabase
-      const response = await fetch(portalEnabled ? '/api/portal' : '/api/listings', {
+      const response = await fetch(adminClient ? '/api/admin' : portalEnabled ? '/api/portal' : '/api/listings', {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
-        body: JSON.stringify({ ...(portalEnabled ? { action: 'create' } : {}), request_id: requestId, listing:
+        body: JSON.stringify({ ...(adminClient ? { action: 'create_listing' } : portalEnabled ? { action: 'create' } : {}), request_id: requestId, listing:
         {
           title,
           description: description || null,
@@ -145,6 +148,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       }
 
       const result = await response.json();
+      if (adminClient) { onSuccess(); return; }
       if (result.account_owned && typeof result.listing_id === 'string' && /^[0-9a-f-]{36}$/i.test(result.listing_id)) {
         onSuccess(); router.push('/listing-posted?listing=' + result.listing_id); return;
       }
@@ -165,6 +169,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
       <div 
+        role="dialog" aria-modal="true" aria-label={adminClient ? "Add property" : "Post free listing"}
         className="portal-dialog portal-form max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
@@ -173,7 +178,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           <div>
             <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-1.5">
               <Sparkles className="w-5 h-5 text-[#005B94]" />
-              <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : 'Post Free Listing'}</span>
+              <span>{isOdia ? 'ନୂତନ ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ' : adminClient ? 'Add Property' : 'Post Free Listing'}</span>
             </h2>
             <p className="text-xs text-slate-500 font-medium">
               {isOdia ? '୧୦୦% ମାଗଣା • ସଙ୍ଗେ ସଙ୍ଗେ ପ୍ରକାଶିତ ହେବ' : '100% Free • Published immediately'}
@@ -190,7 +195,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>Your listing will be saved to your account. You can manage it from any device.</p><Link href="/dashboard" className="mt-1 inline-flex font-semibold text-[#005B94]">Manage My Listings</Link></div>
+          {adminClient ? <div className="rounded-xl bg-sky-50 p-3 text-sm">Publish a property on someone else’s behalf. Use their name and contact number. This listing will be managed by your administrator account.</div> : <div className="rounded-xl bg-sky-50 p-3 text-sm"><p>Your listing will be saved to your account. You can manage it from any device.</p><Link href="/dashboard" className="mt-1 inline-flex font-semibold text-[#005B94]">Manage My Listings</Link></div>}
           {errorMsg && (
             <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl font-medium">
               {errorMsg}
@@ -360,7 +365,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Your account</p><p className="mt-1 break-all text-sm text-slate-600">{auth.session?.user.email||auth.session?.user.phone}</p><p className="mt-1 text-xs text-slate-500">Email is optional. Verify it to receive renewal reminders. Listings expire after 30 days unless renewed.</p></div>
+          <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Your account</p><p className="mt-1 break-all text-sm text-slate-600">{adminClient ? 'Administrator account' : auth.session?.user.email||auth.session?.user.phone}</p><p className="mt-1 text-xs text-slate-500">Email is optional. Verify it to receive renewal reminders. Listings expire after 30 days unless renewed.</p></div>
           {/* Amenities Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
