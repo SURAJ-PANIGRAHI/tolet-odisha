@@ -24,13 +24,13 @@ export function validatePortalListing(value: unknown) {
   const whatsapp = row.whatsapp_number == null ? phone : typeof row.whatsapp_number === "string" ? indianPhone(row.whatsapp_number) : null;
   if (row.rent_negotiable !== undefined && typeof row.rent_negotiable !== "boolean") throw new Error("Check the negotiable rent option.");
   if (
-    !phone || !whatsapp ||
+    !phone || !whatsapp || whatsapp !== phone ||
     !CATEGORIES.some((c) => c.id !== "All" && c.id === row.category) ||
     !ODISHA_DISTRICTS.some((d) => d.split(" ")[0] === row.district) ||
     !["Owner", "Broker", "Third Party"].includes(String(row.advertiser_type))
   )
     throw new Error(
-      "Check your category, district, advertiser type and mobile number.",
+      "Use one Phone / WhatsApp number and check your category, district and advertiser type.",
     );
   if (
     !Number.isInteger(row.rent_monthly) ||

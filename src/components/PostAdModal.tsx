@@ -31,8 +31,6 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [category, setCategory] = useState('Boys Mess');
   const [advertiserType, setAdvertiserType] = useState(adminClient ? 'Third Party' : '');
   const [rentNegotiable, setRentNegotiable] = useState(false);
-  const [sameWhatsApp, setSameWhatsApp] = useState(true);
-  const [whatsappPhone, setWhatsappPhone] = useState('');
   const [rent, setRent] = useState('');
   const [commercialType, setCommercialType] = useState('');
   const [areaSqft, setAreaSqft] = useState('');
@@ -49,6 +47,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [errorMsg, setErrorMsg] = useState('');
 
   const client = adminClient || supabase;
+  const verifiedPhone = !adminClient && auth.session?.user.phone_confirmed_at ? auth.session.user.phone?.replace(/^91(?=\d{10}$)/, '') || '' : '';
+  const primaryPhone = verifiedPhone || contactPhone;
   if (!isOpen) return null;
   if (!adminClient && (!auth.ready || !isAdvertiserSession(auth.session))) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"><div role="dialog" aria-modal="true" aria-label="Sign in to post" className="relative w-full max-w-md"><button type="button" aria-label="Close sign-in" onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-slate-100 p-2 text-slate-600"><X size={18}/></button>{auth.ready ? <AdvertiserSignIn forPosting/> : <p role="status" className="rounded-2xl bg-white p-8">Checking your sign-in…</p>}</div></div>;
   const toggleAmenity = (amenity: string) => {
@@ -73,7 +73,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     setErrorMsg('');
 
     const submittedLocality = (locality === 'Other / ଅନ୍ୟାନ୍ୟ' ? customLocality : locality).trim();
-    if (!title || !rent || !district || !submittedLocality || !contactName || !contactPhone || !advertiserType) {
+    if (!title || !rent || !district || !submittedLocality || !contactName || !primaryPhone || !advertiserType) {
       setErrorMsg(isOdia ? 'ଦୟାକରି ସମସ୍ତ ଆବଶ୍ୟକୀୟ ତଥ୍ୟ ପୂରଣ କରନ୍ତୁ।' : 'Please fill all required fields.');
       return;
     }
@@ -82,9 +82,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       setErrorMsg('Choose a commercial type. Area is optional; if provided, enter a positive whole number up to 10,000,000.');
       return;
     }
-    const phone = contactPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
-    const whatsapp = (sameWhatsApp ? contactPhone : whatsappPhone).replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
-    if (!/^[6-9]\d{9}$/.test(whatsapp)) { setErrorMsg('Enter a valid Indian WhatsApp number.'); return; }
+    const phone = primaryPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
     if (!/^[6-9]\d{9}$/.test(phone) || !Number.isInteger(Number(rent)) || Number(rent) < 0 || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0) {
       setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
       return;
@@ -139,7 +137,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           landmark: landmark || null,
           contact_name: contactName,
           contact_phone: phone,
-          whatsapp_number: whatsapp,
+          whatsapp_number: phone,
           rent_negotiable: rentNegotiable,
           amenities: selectedAmenities,
           images: imageUrls,
@@ -358,13 +356,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                {isOdia ? 'ମୋବାଇଲ୍ ନମ୍ବର *' : 'Contact number for calls *'}
+                {isOdia ? 'ମୋବାଇଲ୍ ନମ୍ବର *' : 'Phone / WhatsApp number *'}
               </label>
               <input
                 type="tel"
                 placeholder="9876543210"
-                value={contactPhone}
-                disabled={loading}
+                value={primaryPhone}
+                disabled={loading || !!verifiedPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
@@ -372,8 +370,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             </div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-slate-100 p-3"><label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={sameWhatsApp} onChange={e=>setSameWhatsApp(e.target.checked)}/> Use the same number for calls and WhatsApp</label>{!sameWhatsApp&&<label className="block text-sm font-medium">WhatsApp number *<input required type="tel" autoComplete="tel" value={whatsappPhone} onChange={e=>setWhatsappPhone(e.target.value)} placeholder="10-digit WhatsApp number" className="mt-1 w-full rounded-xl border border-slate-200 p-3"/></label>}<p className="text-xs text-slate-500">The WhatsApp badge applies only when this listing’s WhatsApp number is verified by your account.</p></div>
-          <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Your account</p><p className="mt-1 break-all text-sm text-slate-600">{adminClient ? 'Administrator account' : auth.session?.user.email||auth.session?.user.phone}</p><p className="mt-1 text-xs text-slate-500">Email is optional. Verify it to receive renewal reminders. Listings expire after 30 days unless renewed.</p></div>
+          <p className="text-xs leading-5 text-slate-500">One number is used for calls and WhatsApp. {verifiedPhone ? <Link href="/dashboard#account-access" className="font-semibold text-[#005B94] underline">Change your verified number in account settings.</Link> : 'You can verify it from your dashboard.'}</p>
+          <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Your account</p><p className="mt-1 break-all text-sm text-slate-600">{adminClient ? 'Administrator account' : auth.session?.user.email||auth.session?.user.phone}</p><p className="mt-1 text-xs text-slate-500">Verify email to receive renewal reminders. Listings expire after 30 days unless renewed.</p></div>
           {/* Amenities Selector */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
