@@ -4,7 +4,7 @@ This branch adds SMS phone sign-in and independent SMS call-number verification.
 
 ## Review URLs
 
-- `/dashboard/phone-preview`: interactive SMS sign-in and verification demonstration. Uses no SDK, SMS, Auth request or database write. Any six digits demonstrate confirmation.
+- `/dashboard/phone-preview`: interactive Phone, WhatsApp, Email and Google sign-in demonstration. Uses no SDK, SMS, Auth request or database write. Any six digits demonstrate phone or WhatsApp confirmation; email and Google use explicit simulated confirmation buttons.
 - `/dashboard/preview`: existing owner dashboard with the new separate phone-verification control.
 
 ## Security model

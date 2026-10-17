@@ -33,7 +33,7 @@ export function PhoneOtp({linkAccount=false,forPosting=false,preview=false,onVer
   event.preventDefault();if(busy)return;setBusy(true);setMessage('');
   try{
    if(!/^\d{6}$/.test(code))throw new Error('Enter the six-digit SMS code.');
-   if(preview){setDone(true);setMessage('Preview: phone verified. Your WhatsApp verification is unchanged.');onVerified?.(sentTo);return;}
+   if(preview){setDone(true);setMessage(linkAccount?'Preview: phone verified.':'Preview: signed in with your phone.');onVerified?.(sentTo);return;}
    const proof=await widgetAction('verify',code,requestId||undefined);
    const token=typeof proof['access-token']==='string'?proof['access-token']:proof.message;
    if(typeof token!=='string')throw new Error('Unable to confirm the code. Request a new one.');
