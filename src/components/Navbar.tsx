@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
           {/* Dedicated Advertise With Us Link */}
           <a
             href="/advertise"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer"
+            className="inline-flex shrink-0 items-center gap-1 px-2 py-1.5 sm:gap-1.5 sm:px-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer"
             title="Advertise your local restaurant, coaching or business"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-600" />
