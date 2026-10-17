@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { AmenitiesFilter } from '@/components/AmenitiesFilter';
 import { RentBudgetSlider, DesktopRentSlider } from '@/components/RentBudgetSlider';
-import { compareListings } from '@/lib/listing-sort';
+import { compareListings, matchesRentBudget } from '@/lib/listing-sort';
 import { portalEnabled } from '@/lib/client/portal';
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase, Listing } from '@/lib/supabase';
@@ -110,7 +110,7 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
       if (selectedCategory !== 'Commercial / Shop' && !selectedAmenities.every(amenity => (item.amenities || []).includes(amenity))) return false;
 
       // Max Rent filter
-      if (item.rent_monthly < minRent || (maxRent !== null && item.rent_monthly > maxRent)) {
+      if (!matchesRentBudget(item,minRent,maxRent)) {
         return false;
       }
 

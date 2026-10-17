@@ -17,6 +17,7 @@ export interface Listing {
   advertiser_type?: 'Owner' | 'Broker' | 'Third Party' | null;
   rent_monthly: number;
   rent_negotiable?: boolean;
+  price_on_request?: boolean;
   deposit: number;
   district: string;
   locality: string;

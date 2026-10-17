@@ -69,4 +69,12 @@ assert.equal((await q('select call_verified from listings where id=$1',[listing]
 assert.equal((await q('select account_confirm_whatsapp_otp($1,$2,$3) ok',[smsUser,'+919876543210','fake']))[0].ok,false);
 for(const role of ['anon','authenticated']){await db.exec('reset role;set role '+role);await assert.rejects(q('select sms_auth_status($1)',[smsUser]));await assert.rejects(q('select * from account_verification_private.sms_phones'));await assert.rejects(q('select sms_auth_exchange_take($1,$2)',[smsUser,nonce]));}
 console.log('PASS MSG91 database: separate badges, unique identity, challenge actor/nonce/destination binding, 60-second limit, proof replay prevention, private encrypted hand-off, hook idempotency, independent posting contacts, SMS badge invalidation and RLS');
+await db.exec('reset role');
+await db.exec(readFileSync(new URL('../supabase/migrations/20261017073050_listing_price_on_request.sql',import.meta.url),'utf8'));
+const requestListing=(await q('select submit_account_listing($1::jsonb,$2,null,gen_random_uuid(),$3) id',[JSON.stringify({...row,contact_phone:'9876543214',price_on_request:true,rent_monthly:null,rent_negotiable:true}),emailUser,'c'.repeat(64)]))[0].id;
+let requestRow=(await q('select * from listings where id=$1',[requestListing]))[0];assert.equal(requestRow.price_on_request,true);assert.equal(requestRow.rent_monthly,0);assert.equal(requestRow.rent_negotiable,false);assert.equal(requestRow.is_active,true);
+await q("select manage_account_listing($1,$2,'edit',$3::jsonb)",[emailUser,requestListing,JSON.stringify({...row,contact_phone:'9876543214',price_on_request:false,rent_monthly:6000})]);
+requestRow=(await q('select * from listings where id=$1',[requestListing]))[0];assert.equal(requestRow.price_on_request,false);assert.equal(requestRow.rent_monthly,6000);
+await assert.rejects(q('update listings set price_on_request=true where id=$1',[requestListing]));
+console.log('PASS price on request database: publish without amount, safe normalization, edit back to priced rent and constraint enforcement');
 await db.close();

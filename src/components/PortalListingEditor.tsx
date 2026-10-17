@@ -171,7 +171,8 @@ export function PortalListingEditor({
               ))}
             </select>
           </label>
-          <label className="block">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={!!row.price_on_request} onChange={e=>field("price_on_request",e.target.checked)}/> Price on request</label>
+          {!row.price_on_request && <label className="block">
             Monthly rent (₹)
             <input
               required
@@ -183,8 +184,8 @@ export function PortalListingEditor({
               onChange={(e) => field("rent_monthly", Number(e.target.value))}
               className="w-full rounded-xl border border-slate-300 p-3"
             />
-          </label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={!!row.rent_negotiable} onChange={e=>field("rent_negotiable",e.target.checked)}/> Rent negotiable</label>
+          </label>}
+          {!row.price_on_request && <label className="flex items-center gap-2"><input type="checkbox" checked={!!row.rent_negotiable} onChange={e=>field("rent_negotiable",e.target.checked)}/> Rent negotiable</label>}
           <label className="block">
             Deposit (₹)
             <input

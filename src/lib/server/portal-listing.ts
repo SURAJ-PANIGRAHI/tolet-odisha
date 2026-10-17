@@ -9,7 +9,9 @@ import { indianPhone } from "./evolution";
 export function validatePortalListing(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error("Invalid listing.");
-  const row = value as Record<string, unknown>;
+  const row = {...value} as Record<string, unknown>;
+  if (row.price_on_request !== undefined && typeof row.price_on_request !== 'boolean') throw new Error('Check the price on request option.');
+  if (row.price_on_request === true) {row.rent_monthly=0;row.rent_negotiable=false;}
   for (const key of ["title", "district", "locality", "contact_name"])
     if (
       typeof row[key] !== "string" ||
@@ -95,6 +97,7 @@ export function validatePortalListing(value: unknown) {
         ["contact_phone", phone.slice(3)],
         ["whatsapp_number", whatsapp.slice(3)],
         ["rent_negotiable", row.rent_negotiable === true],
+        ["price_on_request", row.price_on_request === true],
       ]),
   );
 }

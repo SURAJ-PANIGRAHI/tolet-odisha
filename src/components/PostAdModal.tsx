@@ -31,6 +31,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Boys Mess');
   const [advertiserType, setAdvertiserType] = useState(adminClient ? 'Third Party' : '');
+  const [priceOnRequest, setPriceOnRequest] = useState(false);
   const [rentNegotiable, setRentNegotiable] = useState(false);
   const [rent, setRent] = useState('');
   const [commercialType, setCommercialType] = useState('');
@@ -133,7 +134,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           advertiser_type: advertiserType,
           commercial_type: isCommercial ? commercialType : null,
           area_sqft: areaSqft ? Number(areaSqft) : null,
-          rent_monthly: parseInt(rent, 10),
+          rent_monthly: priceOnRequest ? 0 : parseInt(rent, 10),
+          price_on_request: priceOnRequest,
           deposit: deposit ? parseInt(deposit, 10) : 0,
           district: district.split(' ')[0],
           locality: submittedLocality,
@@ -141,7 +143,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           contact_name: contactName,
           contact_phone: phone,
           whatsapp_number: sameWhatsApp ? phone : whatsappPhone,
-          rent_negotiable: rentNegotiable,
+          rent_negotiable: !priceOnRequest && rentNegotiable,
           amenities: selectedAmenities,
           images: imageUrls,
           is_active: false,
@@ -266,10 +268,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
             <span className="mt-1 block font-normal text-slate-500">Choose Third Party if you are posting on someone else’s behalf without acting as a broker.</span>
           </label>
 
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={rentNegotiable} onChange={e=>setRentNegotiable(e.target.checked)}/> Rent negotiable</label>
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={priceOnRequest} onChange={e=>setPriceOnRequest(e.target.checked)}/> Price on request</label>
+          {!priceOnRequest && <label className="flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={rentNegotiable} onChange={e=>setRentNegotiable(e.target.checked)}/> Rent negotiable</label>}
           {/* Rent & Deposit */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            {!priceOnRequest && <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ମାସିକ ଭଡ଼ା (₹) *' : 'Monthly Rent (₹) *'}
               </label>
@@ -281,7 +284,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
               />
-            </div>
+            </div>}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 {isOdia ? 'ଅଗ୍ରିମ ଟଙ୍କା (₹)' : 'Security Deposit (₹)'}

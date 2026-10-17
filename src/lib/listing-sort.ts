@@ -9,7 +9,12 @@ export function compareListings(a: Listing, b: Listing, sort: string, boostedFir
  if (sort === 'verified') return verificationPoints(b) - verificationPoints(a) || tie;
  if (sort === 'recommended') return Number(b.ranking_score || 0) - Number(a.ranking_score || 0) || tie;
  if (sort === 'oldest') return dateDifference || a.id.localeCompare(b.id);
+ if ((sort === 'price-low' || sort === 'price-high') && !!a.price_on_request !== !!b.price_on_request) return a.price_on_request ? 1 : -1;
  if (sort === 'price-low') return a.rent_monthly - b.rent_monthly || tie;
  if (sort === 'price-high') return b.rent_monthly - a.rent_monthly || tie;
  return tie;
+}
+
+export function matchesRentBudget(listing:Listing,min:number,max:number|null){
+ return listing.price_on_request ? min<=1000 && max===null : listing.rent_monthly>=min && (max===null || listing.rent_monthly<=max);
 }
