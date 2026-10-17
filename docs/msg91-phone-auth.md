@@ -37,6 +37,7 @@ Tests:
 ```
 node tests/msg91-phone-db.mjs
 node tests/msg91-phone-routes.mjs
+node tests/msg91-phone-ui.mjs
 node tests/whatsapp-auth-hook.mjs
 node tests/owner-dashboard-ui.mjs
 npm run lint -- --quiet
