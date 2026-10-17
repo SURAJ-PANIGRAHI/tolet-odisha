@@ -18,9 +18,10 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-3 flex flex-wrap items-center justify-between gap-3">
         
         {/* Brand Logo - KLM Royal Blue Theme */}
-        <div 
-          className="flex items-center gap-2.5 cursor-pointer select-none" 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        <Link
+          href="/"
+          aria-label="ToLet Odisha home"
+          className="flex items-center gap-2.5 select-none rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#005B94]"
         >
           <div className="w-10 h-10 rounded-xl bg-[#005B94] flex items-center justify-center text-white shadow-sm shadow-[#005B94]/20">
             <Home className="w-5 h-5 text-white" />
@@ -35,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ isOdia, setIsOdia, onOpenPostMod
               {isOdia ? 'କୌଣସି କମିଶନ୍ ଦିଅନ୍ତୁ ନାହିଁ' : 'Pay Zero Commission'}
             </p>
           </div>
-        </div>
+        </Link>
 
         {/* Right Actions */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
