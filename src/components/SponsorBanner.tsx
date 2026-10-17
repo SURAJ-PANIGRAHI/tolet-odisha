@@ -7,28 +7,32 @@ import { MessageSquare, Phone, Sparkles, Store } from 'lucide-react';
 interface SponsorBannerProps {
   district: string;
   isOdia: boolean;
+  startIndex?: number;
 }
 
 export const SponsorBanner: React.FC<SponsorBannerProps> = (props) => (
   <DistrictSponsorBanner key={props.district} {...props} />
 );
 
-const DistrictSponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia }) => {
+const DistrictSponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia, startIndex=0 }) => {
   const cleanDistrict = district === 'All' ? 'Balasore' : district.split(' ')[0];
-  const sponsorsList = LOCAL_SPONSORS[cleanDistrict] || [];
+  const sponsorsList = (LOCAL_SPONSORS[cleanDistrict] || []).slice(0,3);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(startIndex % Math.max(1,sponsorsList.length));
+  const [paused,setPaused]=useState(false);
+  const [hovered,setHovered]=useState(false);
+  const [focused,setFocused]=useState(false);
 
-  // Auto-switch between sponsors every 20 seconds if there are multiple sponsors
+  // Rotate up to three local ads, pausing while the visitor interacts.
   useEffect(() => {
-    if (sponsorsList.length <= 1) return;
+    if (sponsorsList.length <= 1 || paused || hovered || focused) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % sponsorsList.length);
-    }, 20000);
+    }, 10000);
 
     return () => clearInterval(timer);
-  }, [sponsorsList.length]);
+  }, [sponsorsList.length,paused,hovered,focused]);
 
   // Business enquiries are handled personally through WhatsApp or email.
   const advertiseUrl = '/advertise';
@@ -36,7 +40,7 @@ const DistrictSponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia 
   const currentSponsor: LocalSponsor | undefined = sponsorsList[currentIndex];
 
   return (
-    <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 my-2">
+    <div aria-label="Local business advertisement" className="col-span-full my-2" onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)} onFocusCapture={()=>setFocused(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))setFocused(false);}}>
       <div className="relative bg-gradient-to-r from-amber-500/10 via-sky-50 to-amber-500/10 border border-amber-300/80 rounded-2xl p-4 sm:p-5 shadow-2xs overflow-hidden transition-all duration-300">
         
         {/* Top Tag Row */}
@@ -54,9 +58,12 @@ const DistrictSponsorBanner: React.FC<SponsorBannerProps> = ({ district, isOdia 
           {/* If multiple sponsors exist, show slide dots */}
           {sponsorsList.length > 1 && (
             <div className="flex items-center gap-1.5">
+              <button type="button" onClick={()=>setPaused(value=>!value)} aria-pressed={paused} className="mr-2 rounded-md px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-white">{paused?'Resume':'Pause'}</button>
               {sponsorsList.map((_, idx) => (
                 <button
+                  type="button"
                   key={idx}
+                  aria-pressed={currentIndex===idx}
                   onClick={() => setCurrentIndex(idx)}
                   className={`h-2 rounded-full transition-all cursor-pointer ${
                     currentIndex === idx ? 'w-5 bg-amber-600' : 'w-2 bg-slate-300 hover:bg-slate-400'

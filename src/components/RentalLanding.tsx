@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { AmenitiesFilter } from '@/components/AmenitiesFilter';
 import { RentBudgetSlider, DesktopRentSlider } from '@/components/RentBudgetSlider';
+import {adPlacement} from '@/lib/ad-placement';
 import { compareListings, matchesRentBudget } from '@/lib/listing-sort';
 import { portalEnabled } from '@/lib/client/portal';
 import React, { useEffect, useState, useMemo } from 'react';
@@ -276,16 +277,12 @@ export default function RentalLanding({preview=false}:{preview?:boolean}) {
                   preview={preview}
                   onSelect={(item) => setSelectedListing(item)}
                 />
-                {/* Insert Sponsor Banner after the 2nd listing */}
-                {!preview && index === 1 && (
-                  <div className="col-span-full"><SponsorBanner district={selectedDistrict} isOdia={isOdia} /></div>
+                {!preview && adPlacement(index,filteredListings.length) && (
+                  <div className={adPlacement(index,filteredListings.length)!}><SponsorBanner district={selectedDistrict} isOdia={isOdia} startIndex={Math.floor(index/4)} /></div>
                 )}
               </React.Fragment>
             ))}
-            {/* If fewer than 2 listings, show sponsor banner at the end */}
-            {!preview && filteredListings.length < 2 && (
-              <div className="col-span-full"><SponsorBanner district={selectedDistrict} isOdia={isOdia} /></div>
-            )}
+
           </div>
         )}
 
