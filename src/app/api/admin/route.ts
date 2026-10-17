@@ -61,6 +61,13 @@ export async function POST(request:Request){
    const result=await auth.db.rpc('submit_account_listing',{p_listing:row,p_user:auth.user.id,p_email:auth.user.email_confirmed_at?auth.user.email:null,p_request:input.request_id,p_management_hash:randomBytes(32).toString('hex')});
    if(result.error)throw result.error;return reply({saved:true,listing_id:result.data});
   }
+  if(input.action==='edit_listing'){
+   if(typeof input.listing_id!=='string'||!isUuid(input.listing_id))return reply({error:'Invalid listing.'},400);
+   let row:Record<string,unknown>;try{row=validatePortalListing(input.listing);}catch(error){return reply({error:error instanceof Error?error.message:'Invalid listing.'},400);}
+   const result=await auth.db.from('listings').update(row).eq('id',input.listing_id).select('id').maybeSingle();
+   if(result.error)throw result.error;if(!result.data)return reply({error:'Listing not found.'},404);
+   return reply({saved:true});
+  }
   if(input.action==='support_reply'||input.action==='support_resolve'){
    if(typeof input.ticket_id!=='string'||!isUuid(input.ticket_id))return reply({error:'Invalid ticket.'},400);
    const sending=input.action==='support_reply';

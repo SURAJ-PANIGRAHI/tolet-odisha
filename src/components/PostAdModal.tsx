@@ -77,7 +77,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     setErrorMsg('');
 
     const submittedLocality = (locality === 'Other / ଅନ୍ୟାନ୍ୟ' ? customLocality : locality).trim();
-    if (!title || (!priceOnRequest && !rent) || !district || !submittedLocality || !contactName || !primaryPhone || !advertiserType) {
+    if (!title || !district || !submittedLocality || !contactName || !primaryPhone || !advertiserType) {
       setErrorMsg(isOdia ? 'ଦୟାକରି ସମସ୍ତ ଆବଶ୍ୟକୀୟ ତଥ୍ୟ ପୂରଣ କରନ୍ତୁ।' : 'Please fill all required fields.');
       return;
     }
@@ -87,7 +87,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
       return;
     }
     const phone = primaryPhone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
-    if (!/^[6-9]\d{9}$/.test(phone) || !Number.isInteger(Number(rent)) || Number(rent) < 0 || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0) {
+    if (!/^[6-9]\d{9}$/.test(phone) || (!priceOnRequest && rent.trim() !== "" && (!Number.isInteger(Number(rent)) || Number(rent) < 0 || Number(rent)>10000000)) || !Number.isInteger(Number(deposit || 0)) || Number(deposit || 0) < 0 || Number(deposit || 0)>10000000) {
       setErrorMsg('Enter a valid Indian mobile number and non-negative whole rupee amounts.');
       return;
     }
@@ -134,8 +134,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           advertiser_type: advertiserType,
           commercial_type: isCommercial ? commercialType : null,
           area_sqft: isCommercial && areaSqft ? Number(areaSqft) : null,
-          rent_monthly: priceOnRequest ? 0 : parseInt(rent, 10),
-          price_on_request: priceOnRequest,
+          rent_monthly: priceOnRequest || !rent.trim() ? 0 : Number(rent),
+          price_on_request: priceOnRequest || !rent.trim(),
           deposit: deposit ? parseInt(deposit, 10) : 0,
           district: district.split(' ')[0],
           locality: submittedLocality,
@@ -143,7 +143,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           contact_name: contactName,
           contact_phone: phone,
           whatsapp_number: sameWhatsApp ? phone : whatsappPhone,
-          rent_negotiable: !priceOnRequest && rentNegotiable,
+          rent_negotiable: !priceOnRequest && !!rent.trim() && rentNegotiable,
           amenities: selectedAmenities,
           images: imageUrls,
           is_active: false,
@@ -274,14 +274,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           <div className="grid grid-cols-2 gap-3">
             {!priceOnRequest && <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                {isOdia ? 'ମାସିକ ଭଡ଼ା (₹) *' : 'Monthly Rent (₹) *'}
+                {isOdia ? 'ମାସିକ ଭଡ଼ା (₹)' : 'Monthly Rent (₹)'}
               </label>
               <input
                 type="number"
-                placeholder="1800"
+                min="0" max="10000000" step="1" placeholder="Leave blank for price on request"
                 value={rent}
                 onChange={(e) => setRent(e.target.value)}
-                required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"
               />
             </div>}
@@ -291,7 +290,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               </label>
               <input
                 type="number"
-                placeholder="0"
+                min="0" max="10000000" step="1" placeholder="0"
                 value={deposit}
                 onChange={(e) => setDeposit(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-[#005B94]"

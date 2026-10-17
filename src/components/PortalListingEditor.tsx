@@ -18,12 +18,14 @@ export function PortalListingEditor({
   listing,
   managementKey,
   persistListing,
+  adminClient,
   onClose,
   onSaved,
 }: {
   listing: Listing;
   managementKey?: string;
   persistListing?: (listing: Listing) => Promise<unknown>;
+  adminClient?: typeof supabase;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -31,8 +33,10 @@ export function PortalListingEditor({
     [files, setFiles] = useState<File[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const verifiedPhone = useVerifiedPhone();
+  const verifiedPhone = useVerifiedPhone(!!adminClient);
   const primaryPhone = verifiedPhone || row.contact_phone;
+  const client=adminClient || supabase;
+  const [rentInput,setRentInput]=useState(listing.price_on_request ? "" : String(listing.rent_monthly));
   const localities = DISTRICT_LOCALITIES[row.district] || [];
   const [other, setOther] = useState(!localities.includes(listing.locality));
   function field<K extends keyof Listing>(key: K, value: Listing[K]) {
@@ -59,20 +63,20 @@ export function PortalListingEditor({
           "image/webp": "webp",
         }[file.type];
         const path = `listings/${crypto.randomUUID()}.${ext}`;
-        const upload = await supabase.storage
+        const upload = await client.storage
           .from("listing-images")
           .upload(path, file, { contentType: file.type });
         if (upload.error) throw upload.error;
         images.push(
-          supabase.storage.from("listing-images").getPublicUrl(path).data
+          client.storage.from("listing-images").getPublicUrl(path).data
             .publicUrl,
         );
       }
-      if (persistListing) await persistListing({ ...row, contact_phone:primaryPhone, images });
+      if (persistListing) await persistListing({ ...row, rent_monthly:row.price_on_request || !rentInput.trim() ? 0 : Number(rentInput), price_on_request:!!row.price_on_request || !rentInput.trim(), rent_negotiable:!row.price_on_request && !!rentInput.trim() && !!row.rent_negotiable, contact_phone:primaryPhone, images });
       else await portalCall("edit", {
         listing_id: row.id,
         key: managementKey,
-        listing: { ...row, contact_phone:primaryPhone, images },
+        listing: { ...row, rent_monthly:row.price_on_request || !rentInput.trim() ? 0 : Number(rentInput), price_on_request:!!row.price_on_request || !rentInput.trim(), rent_negotiable:!row.price_on_request && !!rentInput.trim() && !!row.rent_negotiable, contact_phone:primaryPhone, images },
       });
       onSaved();
     } catch (e) {
@@ -175,13 +179,13 @@ export function PortalListingEditor({
           {!row.price_on_request && <label className="block">
             Monthly rent (₹)
             <input
-              required
               type="number"
               min="0"
               max="10000000"
               step="1"
-              value={row.rent_monthly}
-              onChange={(e) => field("rent_monthly", Number(e.target.value))}
+              value={rentInput}
+              placeholder="Leave blank for price on request"
+              onChange={(e) => setRentInput(e.target.value)}
               className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>}

@@ -31,6 +31,8 @@ assert.equal((await manage.POST(request({action:'remove',listing_id:other},null)
 phoneOnly=true;allowed=true;confirmed=true;guest=false;response=await post.POST(request(input));assert.equal(response.status,200);assert.equal(lastCall.args.p_email,null);assert.equal(lastCall.args.p_user,id);phoneOnly=false;
 console.log('PASS account routes: reject anonymous/unconfirmed/no JWT, enforce origin, server-owned identity/email, whitelist fields, hash old credentials, deny cross-account changes');
 const requested=validate.validatePortalListing({...row,price_on_request:true,rent_monthly:null,rent_negotiable:true});assert.equal(requested.rent_monthly,0);assert.equal(requested.rent_negotiable,false);assert.equal(requested.price_on_request,true);
-assert.throws(()=>validate.validatePortalListing({...row,rent_monthly:null}));assert.throws(()=>validate.validatePortalListing({...row,price_on_request:'yes'}));
+assert.equal(validate.validatePortalListing({...row,rent_monthly:null}).price_on_request,true);assert.throws(()=>validate.validatePortalListing({...row,price_on_request:'yes'}));
 const sort=load('src/lib/listing-sort.ts');const priced={...row,id:'priced',created_at:'2026-01-01',rent_monthly:5000};const unpriced={...priced,id:'request',rent_monthly:0,price_on_request:true};assert(sort.matchesRentBudget(unpriced,1000,null));assert(!sort.matchesRentBudget(unpriced,1000,10000));assert(!sort.matchesRentBudget(unpriced,5000,null));assert(sort.matchesRentBudget(priced,1000,5000));for(const direction of ['price-low','price-high'])assert(sort.compareListings(priced,unpriced,direction,false)<0);
 console.log('PASS price on request validation, normalization, rent filtering and price sorting');
+
+for(const amount of [-1,-200]) {assert.throws(()=>validate.validatePortalListing({...row,rent_monthly:amount}));assert.throws(()=>validate.validatePortalListing({...row,deposit:amount}));}

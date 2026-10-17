@@ -11,6 +11,7 @@ export function validatePortalListing(value: unknown) {
     throw new Error("Invalid listing.");
   const row = {...value} as Record<string, unknown>;
   if (row.price_on_request !== undefined && typeof row.price_on_request !== 'boolean') throw new Error('Check the price on request option.');
+  if (row.rent_monthly == null || row.rent_monthly === '') row.price_on_request=true;
   if (row.price_on_request === true) {row.rent_monthly=0;row.rent_negotiable=false;}
   for (const key of ["title", "district", "locality", "contact_name"])
     if (
