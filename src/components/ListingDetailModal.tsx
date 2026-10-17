@@ -1,4 +1,5 @@
 'use client';
+import {ListingIdLink} from './ListingIdLink';
 import Link from 'next/link';
 import {ShareListing} from './ShareListing';
 import {propertyPath} from '@/lib/property-links';
@@ -131,7 +132,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
         )}
 
         <div className="p-6 sm:p-8">
-          {listing.listing_ref&&<div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4"><p className="text-xs font-bold text-[#005B94]">{listing.listing_ref}</p><div className="flex items-center gap-3"><ShareListing listing={listing}/>{propertyPath(listing)&&<Link href={propertyPath(listing)!} className="text-xs font-bold text-[#005B94] underline">Open full page ↗</Link>}</div></div>}
+          {listing.listing_ref&&<div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4"><ListingIdLink listing={listing}/><div className="flex items-center gap-3"><ShareListing listing={listing}/>{propertyPath(listing)&&<Link href={propertyPath(listing)!} className="text-xs font-bold text-[#005B94] underline">Open full page ↗</Link>}</div></div>}
           {/* Rent and Deposit Header */}
           <div className="flex items-baseline justify-between border-b border-slate-100 pb-4 mb-4">
             <div>
