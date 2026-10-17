@@ -158,16 +158,19 @@ export const DISTRICT_LOCALITIES: Record<string, string[]> = {
 export const CATEGORIES = [
   { id: 'All', label: 'All Listings', labelOdia: 'ସବୁ ବିଜ୍ଞାପନ' },
   { id: 'Boys Mess', label: 'Boys Mess', labelOdia: 'ପୁଅ ମେସ୍' },
+  { id: 'Mess (Boys and Girls)', label: 'Mess (Boys and Girls)', labelOdia: 'ମେସ୍ (ପୁଅ ଓ ଝିଅ)' },
   { id: 'Ladies Mess', label: 'Ladies Mess', labelOdia: 'ମହିଳା ମେସ୍' },
   { id: 'Paying Guest (PG)', label: 'Paying Guest (PG)', labelOdia: 'ପେଇଂ ଗେଷ୍ଟ (PG)' },
   { id: 'Boys Hostel', label: 'Boys Hostel', labelOdia: 'ପୁଅ ହଷ୍ଟେଲ' },
   { id: 'Girls Hostel', label: 'Girls Hostel', labelOdia: 'ଝିଅ ହଷ୍ଟେଲ' },
+  { id: 'Hostel', label: 'Hostel', labelOdia: 'ହଷ୍ଟେଲ' },
   { id: 'Bachelor Room', label: 'Single / Bachelor Room', labelOdia: 'ବ୍ୟାଚଲର ରୁମ୍' },
   { id: '1 BHK Flat', label: '1 BHK Flat', labelOdia: '୧ ବିଏଚକେ ଫ୍ଲାଟ' },
   { id: '2 BHK Flat', label: '2 BHK Flat', labelOdia: '୨ ବିଏଚକେ ଫ୍ଲାଟ' },
   { id: 'Family House', label: 'Family House', labelOdia: 'ପରିବାର ପାଇଁ ଘର' },
   { id: 'Commercial / Shop', label: 'Commercial', labelOdia: 'ଦୋକାନ / କମର୍ସିଆଲ' },
-  { id: 'Tutor / Tuition', label: 'Tuition / Coaching', labelOdia: 'ଟିଉସନ୍ / କୋଚିଂ' }
+  { id: 'Tutor / Tuition', label: 'Tuition / Coaching', labelOdia: 'ଟିଉସନ୍ / କୋଚିଂ' },
+  { id: 'Others', label: 'Others', labelOdia: 'ଅନ୍ୟାନ୍ୟ' }
 ];
 
 export const POPULAR_AMENITIES = [
