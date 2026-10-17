@@ -3,7 +3,7 @@ import {useEffect,useId,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {Phone,ShieldCheck} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
-import {loadPhoneWidget,widgetAction} from '@/lib/client/msg91-widget';
+import {loadPhoneWidget,widgetAction,requirePhoneCaptcha} from '@/lib/client/msg91-widget';
 export function PhoneOtp({linkAccount=false,forPosting=false,preview=false,onVerified}:{linkAccount?:boolean;forPosting?:boolean;preview?:boolean;onVerified?:(phone:string)=>void}){
  const router=useRouter(),id='phone-captcha-'+useId().replace(/[^a-zA-Z0-9]/g,'');
  const [phone,setPhone]=useState(''),[code,setCode]=useState(''),[challenge,setChallenge]=useState(''),[requestId,setRequestId]=useState(''),[sentTo,setSentTo]=useState('');
@@ -21,6 +21,7 @@ export function PhoneOtp({linkAccount=false,forPosting=false,preview=false,onVer
    const digits=phone.replace(/[\s()+-]/g,''),number=digits.length===10?'+91'+digits:'+'+digits;
    if(!/^\+91[6-9][0-9]{9}$/.test(number))throw new Error('Enter one valid 10-digit Indian mobile number.');
    if(preview){setChallenge('preview');setSentTo(number);setResendAt(Date.now()+60000);setMessage('Preview only: no SMS was sent. Enter any six digits to preview success.');return;}
+   requirePhoneCaptcha();
    const next=await api({action:'start',phone:number,purpose:linkAccount?'link':'login'});
    setResendAt(Date.now()+60000);
    const result=await widgetAction(sentTo===number&&requestId?'retry':'send',number.slice(1),requestId||undefined);

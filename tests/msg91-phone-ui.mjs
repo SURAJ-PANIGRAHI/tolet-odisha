@@ -25,3 +25,7 @@ const previousWindow=globalThis.window;let configSeen;
 globalThis.window={initSendOTP(configuration){assert.equal(typeof configuration.success,'function');assert.equal(typeof configuration.failure,'function');configSeen=configuration;setTimeout(()=>Object.assign(globalThis.window,{sendOtp(){},verifyOtp(){},getWidgetData:()=>({widgetId:'test'})}),5);}};
 try{const widget=load('src/lib/client/msg91-widget.ts');let initialized=false;const loading=widget.loadPhoneWidget('captcha-test').then(()=>initialized=true);assert.equal(initialized,false,'script availability alone must not enable Send SMS');await loading;assert.equal(initialized,true);assert.equal(configSeen.captchaRenderId,'captcha-test');}finally{globalThis.window=previousWindow;}
 console.log('PASS MSG91 initialization: required callbacks supplied, Send SMS waits for configured provider methods');
+
+const savedWindow=globalThis.window;
+try{const widget=load('src/lib/client/msg91-widget.ts');globalThis.window={getWidgetData:()=>({captchaValidations:true}),isCaptchaVerified:()=>false};assert.throws(()=>widget.requirePhoneCaptcha(),/Please complete/);globalThis.window.isCaptchaVerified=()=>true;assert.doesNotThrow(()=>widget.requirePhoneCaptcha());globalThis.window.getWidgetData=()=>({captchaValidations:false});globalThis.window.isCaptchaVerified=()=>false;assert.doesNotThrow(()=>widget.requirePhoneCaptcha());}finally{globalThis.window=savedWindow;}
+console.log('PASS CAPTCHA preflight blocks uncompleted challenges before server request/cooldown');

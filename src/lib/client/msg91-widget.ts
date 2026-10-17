@@ -1,5 +1,6 @@
 type Callback=(data:unknown)=>void;
 type ProviderWindow=Window & {
+ isCaptchaVerified?:()=>boolean;
  getWidgetData?:()=>Record<string,unknown>|null;
  initSendOTP?:(configuration:Record<string,unknown>)=>void;
  sendOtp?:(identifier:string,success:Callback,failure:Callback)=>void;
@@ -41,4 +42,11 @@ export function widgetAction(action:'send'|'retry'|'verify',value:string,request
    else failure();
   }catch{failure();}
  });
+}
+
+export function requirePhoneCaptcha(){
+ const provider=window as ProviderWindow;
+ if(provider.getWidgetData?.()?.captchaValidations && !provider.isCaptchaVerified?.()){
+  throw new Error('Please complete “I am human” before sending the code.');
+ }
 }
