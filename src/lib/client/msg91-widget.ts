@@ -1,5 +1,6 @@
 type Callback=(data:unknown)=>void;
 type ProviderWindow=Window & {
+ getWidgetData?:()=>Record<string,unknown>|null;
  initSendOTP?:(configuration:Record<string,unknown>)=>void;
  sendOtp?:(identifier:string,success:Callback,failure:Callback)=>void;
  retryOtp?:(channel:string|null,success:Callback,failure:Callback,requestId?:string)=>void;
@@ -15,7 +16,16 @@ export function loadPhoneWidget(captchaId:string){
   script.onerror=()=>{script.remove();scriptPromise=null;reject(new Error('Unable to load phone verification. Check your connection.'));};document.head.appendChild(script);
  });
  return scriptPromise.then(()=>{
-  provider.initSendOTP!({widgetId:process.env.NEXT_PUBLIC_MSG91_WIDGET_ID,tokenAuth:process.env.NEXT_PUBLIC_MSG91_WIDGET_TOKEN,exposeMethods:true,captchaRenderId:captchaId});
+  return new Promise<void>((resolve,reject)=>{
+   // The SDK validates this callback even when per-method callbacks handle verification.
+   // Never log or trust a token received here; the server validates method proofs.
+   provider.initSendOTP!({widgetId:process.env.NEXT_PUBLIC_MSG91_WIDGET_ID,tokenAuth:process.env.NEXT_PUBLIC_MSG91_WIDGET_TOKEN,exposeMethods:true,captchaRenderId:captchaId,success:()=>{},failure:()=>{}});
+   const started=Date.now();
+   const timer=setInterval(()=>{
+    if(provider.sendOtp&&provider.verifyOtp&&provider.getWidgetData?.()){clearInterval(timer);resolve();}
+    else if(Date.now()-started>15000){clearInterval(timer);reject(new Error('Unable to initialize SMS verification. Reload verification and try again.'));}
+   },100);
+  });
  });
 }
 export function widgetAction(action:'send'|'retry'|'verify',value:string,requestId?:string){
