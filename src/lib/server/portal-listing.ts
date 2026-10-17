@@ -19,6 +19,7 @@ export function validatePortalListing(value: unknown) {
       String(row[key]).length > 200
     )
       throw new Error("Complete the required listing fields.");
+  if (row.category !== "Commercial / Shop") row.area_sqft=null;
   const phone =
     typeof row.contact_phone === "string"
       ? indianPhone(row.contact_phone)

@@ -77,12 +77,12 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
     setErrorMsg('');
 
     const submittedLocality = (locality === 'Other / ଅନ୍ୟାନ୍ୟ' ? customLocality : locality).trim();
-    if (!title || !rent || !district || !submittedLocality || !contactName || !primaryPhone || !advertiserType) {
+    if (!title || (!priceOnRequest && !rent) || !district || !submittedLocality || !contactName || !primaryPhone || !advertiserType) {
       setErrorMsg(isOdia ? 'ଦୟାକରି ସମସ୍ତ ଆବଶ୍ୟକୀୟ ତଥ୍ୟ ପୂରଣ କରନ୍ତୁ।' : 'Please fill all required fields.');
       return;
     }
 
-    if ((isCommercial && !commercialType) || (areaSqft && (!Number.isInteger(Number(areaSqft)) || Number(areaSqft) <= 0 || Number(areaSqft) > 10000000))) {
+    if ((isCommercial && !commercialType) || (isCommercial && areaSqft && (!Number.isInteger(Number(areaSqft)) || Number(areaSqft) <= 0 || Number(areaSqft) > 10000000))) {
       setErrorMsg('Choose a commercial type. Area is optional; if provided, enter a positive whole number up to 10,000,000.');
       return;
     }
@@ -133,7 +133,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
           category,
           advertiser_type: advertiserType,
           commercial_type: isCommercial ? commercialType : null,
-          area_sqft: areaSqft ? Number(areaSqft) : null,
+          area_sqft: isCommercial && areaSqft ? Number(areaSqft) : null,
           rent_monthly: priceOnRequest ? 0 : parseInt(rent, 10),
           price_on_request: priceOnRequest,
           deposit: deposit ? parseInt(deposit, 10) : 0,
@@ -251,7 +251,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({ isOpen, onClose, onSuc
               {COMMERCIAL_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
             </select>
           </label>}
-          {category !== 'Tutor / Tuition' && <label className="block text-xs font-bold text-slate-700">
+          {isCommercial && <label className="block text-xs font-bold text-slate-700">
             Floor area (sq ft) — optional
             <input type="number" min="1" max="10000000" step="1" value={areaSqft} onChange={event => setAreaSqft(event.target.value)} placeholder="Leave blank if not known" className="mt-1 w-full rounded-xl border border-slate-200 p-3 text-sm" />
             {isCommercial && <span className="mt-1 block font-normal text-slate-500">Add the total space if known, in square feet. Describe floor, access and suitable uses below.</span>}

@@ -198,7 +198,7 @@ export function PortalListingEditor({
               className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
-          <label className="block">
+          {row.category === "Commercial / Shop" && <label className="block">
             Area in square feet (optional)
             <input
               type="number"
@@ -214,7 +214,7 @@ export function PortalListingEditor({
               }
               className="w-full rounded-xl border border-slate-300 p-3"
             />
-          </label>
+          </label>}
           <label className="block">
             District
             <select

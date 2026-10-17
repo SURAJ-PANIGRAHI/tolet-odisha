@@ -177,7 +177,7 @@ const ListingDetailContent: React.FC<ListingDetailModalProps> = ({ listing, onCl
           )}
 
           {/* Amenities */}
-          {listing.area_sqft != null && <p className="mt-2 text-sm font-semibold text-slate-700">{listing.area_sqft.toLocaleString('en-IN')} sq ft</p>}
+          {listing.category === 'Commercial / Shop' && listing.area_sqft != null && <p className="mt-2 text-sm font-semibold text-slate-700">{listing.area_sqft.toLocaleString('en-IN')} sq ft</p>}
 
           {listing.amenities && listing.amenities.length > 0 && (
             <div className="mb-6">
