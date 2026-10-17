@@ -77,4 +77,25 @@ await q("select manage_account_listing($1,$2,'edit',$3::jsonb)",[emailUser,reque
 requestRow=(await q('select * from listings where id=$1',[requestListing]))[0];assert.equal(requestRow.price_on_request,false);assert.equal(requestRow.rent_monthly,6000);
 await assert.rejects(q('update listings set price_on_request=true where id=$1',[requestListing]));
 console.log('PASS price on request database: publish without amount, safe normalization, edit back to priced rent and constraint enforcement');
+await db.exec(readFileSync(new URL('../supabase/migrations/20261017110909_inactive_listing_cleanup.sql',import.meta.url),'utf8'));
+await q("insert into reports(listing_id,reason) values($1,'duplicate')",[requestListing]);
+await q("update listings set is_active=false,images=array['https://example.test/photo.jpg'] where id=$1",[requestListing]);
+const clock=(await q('select inactive_since from listings where id=$1',[requestListing]))[0].inactive_since;
+await q("update listings set title='Edited inactive',inactive_since=now()-interval '1 year' where id=$1",[requestListing]);
+assert.equal(String((await q('select inactive_since from listings where id=$1',[requestListing]))[0].inactive_since),String(clock));
+assert.equal((await q('select purge_inactive_listings(100) count'))[0].count,0);
+await q('update listings set is_active=true where id=$1',[requestListing]);assert.equal((await q('select inactive_since from listings where id=$1',[requestListing]))[0].inactive_since,null);
+await q('update listings set is_active=false where id=$1',[requestListing]);
+// Test clock passage locally; production callers cannot backdate this protected clock.
+await db.exec('alter table listings disable trigger listing_inactivity_clock');
+await q("update listings set inactive_since=now()-interval '8 days' where id=$1",[requestListing]);
+await db.exec('alter table listings enable trigger listing_inactivity_clock');
+assert.equal((await q('select purge_inactive_listings(100) count'))[0].count,1);
+assert.equal((await q('select count(*) n from listings where id=$1',[requestListing]))[0].n,0);
+assert.equal((await q('select count(*) n from reports where listing_id=$1',[requestListing]))[0].n,0);
+assert.equal((await q('select count(*) n from listing_management_keys where listing_id=$1',[requestListing]))[0].n,0);
+assert.equal((await q('select count(*) n from listing_photo_cleanup'))[0].n,1);
+assert.equal((await q('select count(*) n from listings where id=$1',[emailListing]))[0].n,1);
+for(const role of ['anon','authenticated']){await db.exec('reset role;set role '+role);await assert.rejects(q('select purge_inactive_listings(100)'));await assert.rejects(q('select * from listing_photo_cleanup'));}
+console.log('PASS inactive cleanup: continuous 7-day clock, edit protection, reactivation reset, early purge rejection, permanent record/report/key removal, photo queue and service-only access');
 await db.close();

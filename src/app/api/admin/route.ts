@@ -36,10 +36,16 @@ export async function GET(request:Request){
    const image=await auth.db.storage.from(ID_BUCKET).download(file.data);if(image.error||!image.data)throw new Error('File unavailable');
    return new Response(await image.data.arrayBuffer(),{headers:{...headers,'Content-Type':image.data.type,'Content-Disposition':'inline'}});
   }
+  const status=params.get('listing_status')||'all';
+  if(!['active','unpublished','expired','all'].includes(status))return reply({error:'Invalid listing filter.'},400);
+  let listingQuery=auth.db.from('listings').select('*');const now=new Date().toISOString();
+  if(status==='active')listingQuery=listingQuery.eq('is_active',true).gt('expires_at',now);
+  if(status==='unpublished')listingQuery=listingQuery.eq('is_active',false).gt('expires_at',now);
+  if(status==='expired')listingQuery=listingQuery.lte('expires_at',now);
   const [queue,reports,listings]=await Promise.all([
    auth.db.rpc('account_admin_id_queue',{p_admin:auth.user.id}),
    auth.db.from('reports').select('id,listing_id,reason,description,created_at,resolved_at').order('created_at',{ascending:false}).limit(200),
-   auth.db.from('listings').select('*').order('created_at',{ascending:false}).limit(200)
+   listingQuery.order('created_at',{ascending:false}).limit(200)
   ]);
   if(queue.error||reports.error||listings.error)throw new Error('Queue unavailable');
   const documents=queue.data?.documents||[];

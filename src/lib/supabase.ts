@@ -18,6 +18,7 @@ export interface Listing {
   rent_monthly: number;
   rent_negotiable?: boolean;
   price_on_request?: boolean;
+  inactive_since?: string | null;
   deposit: number;
   district: string;
   locality: string;
