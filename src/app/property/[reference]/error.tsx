@@ -1,0 +1,2 @@
+'use client';
+export default function PropertyError({reset}:{reset:()=>void}){return <main className="portal-surface min-h-screen px-4 py-16"><section className="portal-panel mx-auto max-w-lg p-8"><h1 className="text-2xl font-bold">Unable to load this property</h1><p className="mt-3 text-slate-600">Please check your connection and try again.</p><button onClick={reset} className="mt-6 rounded-xl bg-[#005B94] px-5 py-3 font-bold text-white">Try again</button></section></main>;}

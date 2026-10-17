@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import {House} from 'lucide-react';
+export default function Unavailable(){return <main className="portal-surface min-h-screen px-4 py-16 text-slate-900"><section className="portal-panel mx-auto max-w-lg p-8 text-center"><House className="mx-auto text-[#005B94]" size={38}/><h1 className="mt-5 text-2xl font-bold">This listing is no longer available</h1><p className="mt-3 text-sm leading-6 text-slate-600">It may have been rented, unpublished or expired. Explore other properties nearby.</p><Link href="/" className="mt-7 inline-flex rounded-xl bg-[#005B94] px-5 py-3 font-bold text-white">Browse other properties</Link></section></main>;}

@@ -98,4 +98,13 @@ assert.equal((await q('select count(*) n from listing_photo_cleanup'))[0].n,1);
 assert.equal((await q('select count(*) n from listings where id=$1',[emailListing]))[0].n,1);
 for(const role of ['anon','authenticated']){await db.exec('reset role;set role '+role);await assert.rejects(q('select purge_inactive_listings(100)'));await assert.rejects(q('select * from listing_photo_cleanup'));}
 console.log('PASS inactive cleanup: continuous 7-day clock, edit protection, reactivation reset, early purge rejection, permanent record/report/key removal, photo queue and service-only access');
+await db.exec('reset role');
+await db.exec(readFileSync(new URL('../supabase/migrations/20261017134013_listing_share_references.sql',import.meta.url),'utf8'));
+const refs=await q('select listing_ref from listings');assert(refs.length>0);assert(refs.every(item=>/^TO-[0-9]{6,}$/.test(item.listing_ref)));assert.equal(new Set(refs.map(item=>item.listing_ref)).size,refs.length);
+const makeReference=async()=>{const id=(await q('select submit_account_listing($1::jsonb,$2,null,gen_random_uuid(),$3) id',[JSON.stringify({...row,contact_phone:'9876543214'}),emailUser,'d'.repeat(64)]))[0].id;return(await q('select * from listings where id=$1',[id]))[0];};
+const referenced=await makeReference();await q("update listings set title='Edited title' where id=$1",[referenced.id]);assert.equal((await q('select listing_ref from listings where id=$1',[referenced.id]))[0].listing_ref,referenced.listing_ref);
+await assert.rejects(q('update listings set listing_number=999999 where id=$1',[referenced.id]));
+await q('update listings set is_active=false where id=$1',[referenced.id]);await db.exec('set role anon');assert.equal((await q('select * from listings where listing_ref=$1',[referenced.listing_ref])).length,0);await db.exec('reset role');
+await q('delete from listings where id=$1',[referenced.id]);const nextReference=await makeReference();assert.notEqual(nextReference.listing_ref,referenced.listing_ref);assert(BigInt(nextReference.listing_number)>BigInt(referenced.listing_number));
+console.log('PASS property references: existing records backfilled, unique automatic future IDs, immutable on edit, no reuse after deletion, unavailable rows hidden by RLS');
 await db.close();

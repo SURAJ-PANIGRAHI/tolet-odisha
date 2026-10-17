@@ -1,4 +1,5 @@
 'use client';
+import {ShareListing} from './ShareListing';
 import type {Listing} from '@/lib/supabase';
 import {MapPin,Phone,ArrowUpRight,House,Check,ShieldCheck} from 'lucide-react';
 import {WhatsAppIcon} from './BrandIcons';
@@ -20,6 +21,7 @@ export function ListingCard({listing,isOdia,onSelect,preview=false}:ListingCardP
     {preview?<span className="absolute bottom-3 right-3 rounded-md bg-white/95 px-2 py-1 text-[10px] font-semibold text-slate-600">Sample illustration</span>:null}
    </div>
    <div className="p-5 sm:p-6"><div className="flex flex-wrap items-baseline gap-x-2 gap-y-1"><p className="text-[1.7rem] font-extrabold tracking-tight text-slate-900">{listing.price_on_request?'Price on request':`₹${listing.rent_monthly.toLocaleString('en-IN')}`}</p>{!listing.price_on_request&&<span className="text-sm text-slate-600">/ {isOdia?'ମାସିକ':'month'}</span>}{!listing.price_on_request&&listing.rent_negotiable?<span className="rounded-full bg-sky-50 px-2 py-1 text-xs font-semibold text-[#005B94]">Negotiable</span>:null}{listing.deposit>0?<span className="ml-auto text-[11px] font-medium text-slate-500">{isOdia?'ଅଗ୍ରିମ':'Deposit'} ₹{listing.deposit.toLocaleString('en-IN')}</span>:null}</div>
+    {listing.listing_ref&&<p className="mt-3 text-[11px] font-semibold text-[#005B94]">{listing.listing_ref}</p>}
     <h3 className="mt-2 line-clamp-1 text-base font-bold tracking-tight text-slate-900 group-hover:text-[#005B94] sm:text-lg">{listing.title}</h3>
     <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-600"><MapPin size={14} className="shrink-0 text-blue-600"/><span className="truncate">{listing.locality}, {listing.district}</span></p>
     <div className="mt-4 flex min-h-7 flex-wrap items-center gap-2">{listing.id_verified?<span title="Government ID reviewed. This does not verify property ownership." className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-800"><ShieldCheck size={14}/>Verified Profile</span>:<ListingVerificationStamp listing={listing}/>}<span className="text-[11px] text-slate-500">{listing.advertiser_type||'Advertiser'} · {isOdia?'ସ୍ୱଘୋଷିତ':'self-declared'}</span></div>
@@ -29,6 +31,7 @@ export function ListingCard({listing,isOdia,onSelect,preview=false}:ListingCardP
   <div className="mx-5 mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 py-4 sm:mx-6">
    {preview?<button type="button" onClick={()=>onSelect(listing)} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-bold text-white"><WhatsAppIcon width={16} height={16}/>WhatsApp preview</button>:<a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-800"><WhatsAppIcon width={16} height={16}/>WhatsApp</a>}
    {preview?<button onClick={()=>onSelect(listing)} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700"><Phone size={14}/>Call preview</button>:<a href={`tel:${listing.contact_phone}`} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"><Phone size={14}/>{isOdia?'କଲ୍ କରନ୍ତୁ':'Call'}</a>}
+   {!preview&&<ShareListing listing={listing} compact/>}
    <button type="button" onClick={()=>onSelect(listing)} aria-label={`View details for ${listing.title}`} className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 text-[#005B94] transition-colors hover:bg-sky-50"><ArrowUpRight size={18}/></button>
   </div>
  </article>;

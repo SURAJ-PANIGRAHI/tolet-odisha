@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';import {createRequire} from 'node:module';import assert from 'node:assert/strict';import ts from 'typescript';import React from 'react';import {renderToStaticMarkup} from 'react-dom/server';
 const require=createRequire(import.meta.url);
 function load(path,mocks={}){const mod={exports:{}};new Function('require','module','exports',ts.transpileModule(readFileSync(new URL('../'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>Object.hasOwn(mocks,name)?mocks[name]:require(name),mod,mod.exports);return mod.exports;}
-const {ListingCard}=load('src/components/ListingCard.tsx',{'./BrandIcons':load('src/components/BrandIcons.tsx'),'./VerificationBadges':load('src/components/VerificationBadges.tsx')});
+const {ListingCard}=load('src/components/ListingCard.tsx',{'./ShareListing':{ShareListing:()=>null},'./BrandIcons':load('src/components/BrandIcons.tsx'),'./VerificationBadges':load('src/components/VerificationBadges.tsx')});
 const listing={id:'test',title:'Test property',category:'Hostel',price_on_request:true,rent_monthly:0,rent_negotiable:true,deposit:0,contact_phone:'9876543210',images:[],amenities:[],locality:'Azimabad',district:'Balasore'};
 const html=renderToStaticMarkup(React.createElement(ListingCard,{listing,isOdia:false,onSelect(){}}));assert(html.includes('Price on request'));assert(!html.includes('₹0'));assert(!html.includes('>Negotiable<'));assert(!html.includes('/ month'));
 const priced=renderToStaticMarkup(React.createElement(ListingCard,{listing:{...listing,price_on_request:false,rent_monthly:6000},isOdia:false,onSelect(){}}));assert(priced.includes('₹6,000'));assert(priced.includes('Negotiable'));
