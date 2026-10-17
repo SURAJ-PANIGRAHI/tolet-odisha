@@ -1,6 +1,6 @@
 import type { Listing } from '@/lib/supabase';
 export function verificationPoints(listing: Listing) {
- return (listing.id_verified ? 200 : 0) + (listing.phone_verified ? 100 : 0) + (listing.email_verified ? 50 : 0);
+ return (listing.id_verified ? 200 : 0) + (listing.phone_verified || listing.call_verified ? 100 : 0) + (listing.email_verified ? 50 : 0);
 }
 export function compareListings(a: Listing, b: Listing, sort: string, boostedFirst: boolean) {
  const dateDifference = Date.parse(a.created_at) - Date.parse(b.created_at);

@@ -4,6 +4,7 @@ import { ShieldCheck } from "lucide-react";
 export function ListingVerificationStamp({ listing }: { listing: Listing }) {
   const checks = [
     listing.id_verified ? "Government ID verified" : null,
+    listing.call_verified ? "Phone verified" : null,
     listing.phone_verified ? "WhatsApp verified" : null,
     listing.email_verified ? "Email verified" : null,
   ].filter((value): value is string => value !== null);
@@ -16,6 +17,7 @@ export function ListingVerificationStamp({ listing }: { listing: Listing }) {
 export function VerificationBadges({ listing }: { listing: Listing }) {
   const flags = [
     ["Email", !!listing.email_verified, "Confirmed ✓", "Not verified"],
+    ["Phone", !!listing.call_verified, "Confirmed ✓", "Not verified"],
     ["WhatsApp", !!listing.phone_verified, "Confirmed ✓", "Not verified"],
     ["Govt ID", !!listing.id_verified, "Verified ✓", "Not verified"],
   ] as const;

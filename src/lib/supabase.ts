@@ -30,6 +30,7 @@ export interface Listing {
   is_active: boolean;
   email_verified?: boolean;
   phone_verified?: boolean;
+  call_verified?: boolean;
   id_verified?: boolean;
   ranking_score?: number;
   portal_listing?: boolean;

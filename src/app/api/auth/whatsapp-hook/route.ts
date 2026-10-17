@@ -1,3 +1,4 @@
+import {msg91Ready,sealAuthOtp,proofHash} from '@/lib/server/msg91';
 import {validAuthHook} from '@/lib/server/auth-hook-signature';
 import {sendWhatsApp,whatsappLoginReady} from '@/lib/server/whatsapp-delivery';
 import {serverDb} from '@/lib/server/lifecycle';
@@ -5,7 +6,6 @@ export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(request:Request){
- if(!whatsappLoginReady())return reply({error:{message:'WhatsApp login is not configured.'}},503);
  try{
   if(!request.body||Number(request.headers.get('content-length')||0)>20000)return reply({error:{message:'Invalid payload.'}},400);
   const reader=request.body.getReader();const parts:Uint8Array[]=[];let size=0;
@@ -17,11 +17,19 @@ export async function POST(request:Request){
   const raw=String(payload.sms?.phone||'').replace(/^\+/,'');const phone='+'+raw;
   if(!/^91[6-9][0-9]{9}$/.test(raw)||typeof otp!=='string'||!/^\d{6,10}$/.test(otp)||typeof user?.id!=='string')return reply({error:{message:'Invalid authentication message.'}},400);
   const db=serverDb();
+  if(msg91Ready()){
+   const bridge=await db.rpc('sms_auth_exchange_capture',{p_actor:user.id,p_phone:phone,p_cipher:sealAuthOtp(otp)});
+   if(bridge.error)throw new Error('Exchange check failed');
+   if(bridge.data===true)return reply({});
+  }
+  if(!whatsappLoginReady())return reply({error:{message:'WhatsApp login is not configured.'}},503);
   const allowed=await db.rpc('account_allow_otp_delivery',{p_actor:user.id,p_phone:phone});
   if(allowed.error)throw new Error('Delivery check failed');
   if(allowed.data==='limited')return reply({error:{message:'Too many requests. Try again later.'}},429);
   if(allowed.data!=='allowed')return reply({error:{message:'Use your existing sign-in method and link this number from your account settings.'}},409);
   await sendWhatsApp(phone,`Your ToLet Odisha sign-in code is ${otp}. Enter it only on www.toletodisha.in. Do not share this code.\n\nManage your listings: https://www.toletodisha.in/dashboard`);
+  const receipt=await db.rpc('account_record_whatsapp_otp',{p_actor:user.id,p_phone:phone,p_hash:proofHash(phone+':'+otp)});
+  if(receipt.error)throw new Error('Delivery receipt unavailable');
   return reply({});
  }catch{return reply({error:{message:'WhatsApp delivery is temporarily unavailable. Please retry.'}},503);}
 }

@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Keep private signed URLs and original payment QR images out of image optimisers. */
 import { useState } from "react";
 import Link from 'next/link';
-import {useAdvertiserSession} from './AdvertiserSession';
+import {useVerifiedPhone} from '@/lib/client/useVerifiedPhone';
 import { useModal } from "@/lib/client/useModal";
 import { supabase, type Listing } from "@/lib/supabase";
 import { portalCall } from "@/lib/client/portal";
@@ -31,8 +31,7 @@ export function PortalListingEditor({
     [files, setFiles] = useState<File[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const {session}=useAdvertiserSession();
-  const verifiedPhone = session?.user.phone_confirmed_at ? session.user.phone?.replace(/^91(?=\d{10}$)/, '') || '' : '';
+  const verifiedPhone = useVerifiedPhone();
   const primaryPhone = verifiedPhone || row.contact_phone;
   const localities = DISTRICT_LOCALITIES[row.district] || [];
   const [other, setOther] = useState(!localities.includes(listing.locality));
@@ -69,11 +68,11 @@ export function PortalListingEditor({
             .publicUrl,
         );
       }
-      if (persistListing) await persistListing({ ...row, contact_phone:primaryPhone,whatsapp_number:primaryPhone, images });
+      if (persistListing) await persistListing({ ...row, contact_phone:primaryPhone, images });
       else await portalCall("edit", {
         listing_id: row.id,
         key: managementKey,
-        listing: { ...row, contact_phone:primaryPhone,whatsapp_number:primaryPhone, images },
+        listing: { ...row, contact_phone:primaryPhone, images },
       });
       onSaved();
     } catch (e) {
@@ -288,17 +287,18 @@ export function PortalListingEditor({
             />
           </label>
           <label className="block">
-            Phone / WhatsApp number
+            Call number
             <input
               required
               type="tel"
               value={primaryPhone}
               disabled={!!verifiedPhone}
-              onChange={(e) => setRow(r=>({...r,contact_phone:e.target.value,whatsapp_number:e.target.value}))}
+              onChange={(e) => field('contact_phone',e.target.value)}
               className="w-full rounded-xl border border-slate-300 p-3"
             />
           </label>
-          <p className="text-xs text-slate-500">One number is used for calls and WhatsApp. {verifiedPhone&&<Link href="/dashboard#account-access" className="text-[#005B94] underline">Change your verified number in account settings.</Link>}</p>
+          <label className="block">WhatsApp number<input required type="tel" value={row.whatsapp_number||''} onChange={e=>field('whatsapp_number',e.target.value)} className="w-full rounded-xl border border-slate-300 p-3"/></label>
+          <p className="text-xs text-slate-500">Call and WhatsApp numbers are verified separately. {verifiedPhone&&<Link href="/dashboard#account-access" className="text-[#005B94] underline">Change your verified call number in account settings.</Link>}</p>
           <fieldset>
             <legend>Amenities</legend>
             <div className="flex flex-wrap gap-3">

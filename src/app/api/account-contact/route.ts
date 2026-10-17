@@ -1,14 +1,23 @@
+import {proofHash,msg91Ready} from '@/lib/server/msg91';
 import {indianPhone} from '@/lib/server/evolution';
 import {portalUser} from '@/lib/server/portal-auth';
 import {consumeQuota,readInput} from '@/lib/server/lifecycle';
 import {sendWhatsApp,whatsappDeliveryReady,whatsappLoginReady} from '@/lib/server/whatsapp-delivery';
 const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
-export async function GET(){return reply({whatsapp_login:whatsappLoginReady(),whatsapp_messaging:whatsappDeliveryReady()});}
+export async function GET(){return reply({phone_login:msg91Ready()&&!!process.env.SUPABASE_SERVICE_ROLE_KEY,whatsapp_login:whatsappLoginReady(),whatsapp_messaging:whatsappDeliveryReady()});}
 export async function POST(request:Request){
  if(request.headers.get("origin")!==new URL(request.url).origin)return reply({error:"Invalid origin."},403);
  try{
   const auth=await portalUser(request);if(!auth)return reply({error:'Please sign in.'},401);
   const input=await readInput(request);
+  if(input.action==='confirm_whatsapp'){
+   const phone=auth.user.phone_confirmed_at&&auth.user.phone?indianPhone(auth.user.phone):null;
+   if(!phone||typeof input.code!=='string'||!/^\d{6,10}$/.test(input.code))return reply({error:'Complete WhatsApp verification first.'},400);
+   if(!await consumeQuota('confirm-wa:'+auth.user.id,5))return reply({error:'Please try again later.'},429);
+   const result=await auth.db.rpc('account_confirm_whatsapp_otp',{p_actor:auth.user.id,p_phone:phone,p_hash:proofHash(phone+':'+input.code)});
+   if(result.error||result.data!==true)return reply({error:'WhatsApp confirmation could not be recorded. Request a new WhatsApp code.'},409);
+   return reply({verified:true});
+  }
   if(input.action==='check_phone'){
    const phone=typeof input.phone==='string'?indianPhone(input.phone):null;if(!phone)return reply({error:'Enter one valid Indian number.'},400);
    if(!await consumeQuota('check-account-phone:'+auth.user.id,10))return reply({error:'Please try again later.'},429);

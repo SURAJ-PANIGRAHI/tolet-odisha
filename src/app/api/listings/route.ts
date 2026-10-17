@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   return Response.json({saved:true,account_owned:true,listing_id:data},{headers});
  } catch(e) {
   const code=typeof e==='object'&&e&&'code' in e?String(e.code):'configuration_or_network';
-  if(code==='P0001'&&e instanceof Object&&'message' in e&&String(e.message).startsWith('Use your verified Phone'))return Response.json({error:'Use your verified Phone / WhatsApp number. Change it in account settings first.'},{status:409,headers});
+  if(code==='P0001'&&e instanceof Object&&'message' in e&&String(e.message).startsWith('Use your verified Phone'))return Response.json({error:'Use your verified call number. Change it in account settings first.'},{status:409,headers});
   console.error('account_listing_submission_failed',{code});
   return Response.json({error:'Unable to submit your listing. Please try again later.'},{status:503,headers});
  }

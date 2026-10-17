@@ -32,7 +32,7 @@ export async function POST(request: Request) {
    if(input.action==='edit'){try{row=validatePortalListing(input.listing);}catch(e){return reply({error:e instanceof Error?e.message:'Invalid listing.'},400);}}
    ({data,error}=await auth.db.rpc('manage_account_listing',{p_user:auth.user.id,p_listing:input.listing_id,p_action:input.action,p_data:row}));
   }
-  if(error){if(error.code==='P0001'&&error.message.startsWith('Use your verified Phone'))return reply({error:'Use your verified Phone / WhatsApp number. Change it in account settings first.'},409);if(error.code==='P0001')return reply({error:'This listing cannot be changed or renewed in its current state. Renewal opens three days before expiry.'},409);throw error;}
+  if(error){if(error.code==='P0001'&&error.message.startsWith('Use your verified Phone'))return reply({error:'Use your verified call number. Change it in account settings first.'},409);if(error.code==='P0001')return reply({error:'This listing cannot be changed or renewed in its current state. Renewal opens three days before expiry.'},409);throw error;}
   if(data!==true)return reply({error:'Listing not found in your account, or the private link is invalid.'},403);
   return reply({saved:true});
  }catch{return reply({error:'Unable to update your listing. Please retry.'},503);}
