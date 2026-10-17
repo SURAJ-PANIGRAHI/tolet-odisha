@@ -1,0 +1,1 @@
+update public.listings set amenities=array_replace(array_replace(amenities,'Mess Food Available','Hygienic Food'),'Drinking Water (RO)','Drinking Water (RO/Aquaguard)') where amenities && array['Mess Food Available','Drinking Water (RO)'];

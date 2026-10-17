@@ -21,6 +21,7 @@ export function validatePortalListing(value: unknown) {
     )
       throw new Error("Complete the required listing fields.");
   if (row.category !== "Commercial / Shop") row.area_sqft=null;
+  if (Array.isArray(row.amenities)) row.amenities=[...new Set(row.amenities.map(value=>value==='Mess Food Available'?'Hygienic Food':value==='Drinking Water (RO)'?'Drinking Water (RO/Aquaguard)':value))];
   const phone =
     typeof row.contact_phone === "string"
       ? indianPhone(row.contact_phone)
